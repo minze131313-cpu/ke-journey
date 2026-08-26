@@ -1,0 +1,10 @@
+{
+  "name": "KE Journey 旅行路书",
+  "short_name": "KE Journey",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fff8ec",
+  "theme_color": "#087f78",
+  "lang": "zh-CN",
+  "icons": [{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}
