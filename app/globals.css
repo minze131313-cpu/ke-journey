@@ -584,3 +584,8 @@ html,body { max-width:100%; overflow-x:hidden; }
 .not-found-actions a.primary { background:var(--teal-dark); border-color:var(--teal-dark); color:#f8f4e9; }
 .not-found-actions a:hover { opacity:.88; }
 @media (max-width:640px) { .not-found-stamp { display:none; } .not-found-copy { text-align:left; } .not-found-actions { justify-content:flex-start; } }
+
+/* legacy redirect page */
+.legacy-redirect { min-height:60vh; display:grid; place-content:center; gap:14px; padding:40px 24px; text-align:center; }
+.legacy-redirect p { margin:0; color:var(--muted); font-size:14px; }
+.legacy-redirect a { color:var(--teal-dark); font-size:14px; }

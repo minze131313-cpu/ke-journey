@@ -136,13 +136,18 @@ test("serves WebP srcset variants with JPG fallbacks", async () => {
   assert.match(home, /\/detail\/opt\/qinghai\.\d+\.webp \d+w/);
 });
 
-test("permanently redirects legacy unprefixed route and poi URLs", async () => {
+test("redirects legacy unprefixed route and poi URLs for static hosting", async () => {
+  // 静态托管环境没有服务端 301：旧链接页面用 canonical + 客户端跳转衔接。
   const route = await render("/route/11");
-  assert.equal(route.status, 308, "/route/11");
-  assert.match(route.headers.get("location") ?? "", /\/qinggan-loop\/route\/11$/);
+  assert.equal(route.status, 200, "/route/11");
+  const routeHtml = await route.text();
+  assert.match(routeHtml, /canonical" href="https:\/\/ke-journey\.bordy\.cn\/qinggan-loop\/route\/11\/"/);
+  assert.match(routeHtml, /href="\/qinggan-loop\/route\/11\/"/);
   const poi = await render("/poi/mogao");
-  assert.equal(poi.status, 308, "/poi/mogao");
-  assert.match(poi.headers.get("location") ?? "", /\/qinggan-loop\/poi\/mogao$/);
+  assert.equal(poi.status, 200, "/poi/mogao");
+  const poiHtml = await poi.text();
+  assert.match(poiHtml, /canonical" href="https:\/\/ke-journey\.bordy\.cn\/qinggan-loop\/poi\/mogao\/"/);
+  assert.match(poiHtml, /href="\/qinggan-loop\/poi\/mogao\/"/);
 });
 
 test("returns 404 for unknown journey slugs", async () => {

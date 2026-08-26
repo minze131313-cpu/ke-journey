@@ -1,6 +1,8 @@
 import type { MetadataRoute } from "next";
 import { journeys } from "./journeys/registry";
 
+export const dynamic = "force-static";
+
 const baseUrl = "https://ke-journey.bordy.cn";
 
 export default function sitemap(): MetadataRoute.Sitemap {
