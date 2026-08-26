@@ -46,9 +46,23 @@ export default defineConfig(async () => {
 
   return {
     css: { postcss: { plugins: [tailwindcss()] } },
-    server: isCodexSeatbeltSandbox
-      ? { watch: { useFsEvents: false, usePolling: true } }
-      : undefined,
+    server: {
+      ...(isCodexSeatbeltSandbox ? { watch: { useFsEvents: false, usePolling: true } } : {}),
+      // 出行服务：本地开发时把 /api/ 转发到 RollingGo 代理（线上由 VPS nginx 承担）。
+      // 上游 token 从本地 .env.local 的 ROLLINGGO_PROXY_TOKEN 读取，不进仓库。
+      proxy: {
+        "/api": {
+          target: "https://1439498936-460a7b6oqn.ap-guangzhou.tencentscf.com",
+          changeOrigin: true,
+          rewrite: () => "/",
+          configure: (proxy) => {
+            proxy.on("proxyReq", (proxyReq) => {
+              proxyReq.setHeader("X-Proxy-Token", process.env.ROLLINGGO_PROXY_TOKEN ?? "");
+            });
+          },
+        },
+      },
+    },
     plugins: [
       vinext(),
       sites(),

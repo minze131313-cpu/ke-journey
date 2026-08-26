@@ -115,7 +115,7 @@ test("serves a complete XML sitemap for every journey page", async () => {
   const xml = await response.text();
   assert.match(xml, /https:\/\/ke-journey\.bordy\.cn\/qinggan-loop\/poi\/mogao/);
   assert.match(xml, /https:\/\/ke-journey\.bordy\.cn\/qinggan-loop\/route\/12/);
-  assert.equal((xml.match(/<loc>/g) ?? []).length, 39, "39 pages: home + loop + 12 routes + 25 places");
+  assert.equal((xml.match(/<loc>/g) ?? []).length, 41, "41 pages: home + loop + flights + stay + 12 routes + 25 places");
 });
 
 test("returns a branded Chinese 404 for unknown paths", async () => {
@@ -168,4 +168,37 @@ test("returns 404 for unknown journey slugs", async () => {
   assert.equal(response.status, 404, "unknown journey slug");
   const nested = await render("/nonexistent-journey/poi/xining");
   assert.equal(nested.status, 404, "unknown journey nested");
+});
+
+test("shows flight buttons on the terminal place detail page", async () => {
+  const html = await htmlFor("/qinggan-loop/poi/xining");
+  assert.match(html, /href="\/qinggan-loop\/flights\?direction=outbound"/);
+  assert.match(html, /href="\/qinggan-loop\/flights\?direction=return"/);
+  assert.match(html, /查询去程航班/);
+  assert.match(html, /查询回程航班/);
+  assert.doesNotMatch(html, /查询酒店/);
+});
+
+test("shows separate hotel and minsu buttons on intermediate place detail pages", async () => {
+  const html = await htmlFor("/qinggan-loop/poi/mogao");
+  assert.match(html, /href="\/qinggan-loop\/stay\?place=mogao&amp;type=hotel"/);
+  assert.match(html, /href="\/qinggan-loop\/stay\?place=mogao&amp;type=minsu"/);
+  assert.match(html, /查询酒店/);
+  assert.match(html, /查询民宿/);
+  assert.doesNotMatch(html, /查询去程航班/);
+});
+
+test("keeps travel service buttons off road-risk places", async () => {
+  const html = await htmlFor("/qinggan-loop/poi/u-road");
+  assert.doesNotMatch(html, /查询酒店/);
+  assert.doesNotMatch(html, /查询去程航班/);
+});
+
+test("renders the flight and stay service pages", async () => {
+  const flights = await htmlFor("/qinggan-loop/flights");
+  assert.match(flights, /航班查询/);
+  assert.match(flights, /返回环线地图/);
+  const stay = await htmlFor("/qinggan-loop/stay");
+  assert.match(stay, /选择停留点/);
+  assert.match(stay, /查住宿/);
 });

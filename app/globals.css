@@ -873,3 +873,139 @@ html,body { max-width:100%; overflow-x:hidden; }
   .detail-shell ~ .theme-switcher { top:calc(66px + env(safe-area-inset-top)); right:12px; bottom:auto; }
   .theme-menu { min-width:180px; }
 }
+
+/* ============================================================
+   出行服务：航班 / 住宿页面 + 详情页服务入口
+   ============================================================ */
+
+/* ── 详情页服务入口 ── */
+.travel-services { display:grid; grid-template-columns:minmax(200px,.55fr) minmax(0,1.45fr); gap:20px; align-items:stretch; margin:26px 0; padding:22px 24px; border:1px solid var(--border-soft); border-radius:var(--radius-md,16px); background:var(--surface); }
+.travel-services-head { display:flex; align-items:center; gap:14px; }
+.travel-services-head > span { width:44px; height:44px; display:grid; place-items:center; border-radius:50%; background:var(--teal-soft); font-size:18px; }
+.travel-services-head small { color:var(--meta); font:600 10px/1 var(--font-geist-mono),monospace; letter-spacing:.14em; }
+.travel-services-head h2 { margin:6px 0 0; font:600 22px/1.2 Georgia,"Songti SC",serif; color:var(--ink); }
+.travel-service-actions { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.travel-service-actions a { display:flex; flex-direction:column; justify-content:center; gap:6px; min-height:76px; padding:14px 16px; border:1px solid var(--border); border-radius:14px; background:var(--card); color:var(--ink); text-decoration:none; transition:transform .15s ease, box-shadow .15s ease; }
+.travel-service-actions a:hover { transform:translateY(-2px); box-shadow:var(--elev-raised); }
+.travel-service-actions a b { font-size:14px; }
+.travel-service-actions a small { color:var(--muted); font-size:11px; }
+.travel-service-actions a em { align-self:flex-end; margin-top:-24px; color:var(--teal-dark); font-style:normal; font-size:15px; }
+
+/* ── 出行服务页面骨架 ── */
+.travel-shell { min-height:100vh; background:var(--paper); }
+.travel-header { position:relative; padding:74px 6vw 30px; color:#f6f1e3; background:var(--teal-dark); }
+.travel-header .back-map { display:inline-flex; align-items:center; gap:8px; margin-bottom:26px; color:rgba(255,255,255,.82); font-size:12px; text-decoration:none; }
+.travel-header .back-map:hover { color:#fff; }
+.travel-title-wrap small { color:#d9c07a; font:600 10px/1 var(--font-geist-mono),monospace; letter-spacing:.18em; }
+.travel-title-wrap h1 { margin:12px 0 8px; font:500 clamp(30px,4.6vw,46px)/1.12 Georgia,"Songti SC",serif; }
+.travel-title-wrap p { margin:0; max-width:640px; color:rgba(246,241,227,.78); font-size:13px; line-height:1.8; }
+.travel-form { max-width:1240px; margin:0 auto; padding:28px 42px 0; }
+.travel-type-tabs { display:flex; gap:10px; margin-bottom:14px; }
+.travel-type-tabs button { display:flex; flex-direction:column; align-items:flex-start; gap:3px; min-width:180px; padding:13px 18px; border:1px solid var(--border); border-radius:14px; background:var(--card); color:var(--muted); cursor:pointer; text-align:left; }
+.travel-type-tabs button b { font-size:14px; color:var(--ink); }
+.travel-type-tabs button small { font-size:11px; }
+.travel-type-tabs button.active { border-color:var(--teal); background:var(--teal-soft); color:var(--teal-dark); }
+.travel-controls { display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end; padding:16px; border:1px solid var(--border-soft); border-radius:16px; background:var(--surface); }
+.city-picker-trigger { display:flex; flex-direction:column; align-items:flex-start; gap:5px; min-width:190px; padding:10px 14px; border:1px solid var(--border); border-radius:12px; background:var(--card); color:var(--ink); cursor:pointer; text-align:left; }
+.city-picker-trigger small { color:var(--muted); font-size:10px; }
+.city-picker-trigger b { font-size:15px; }
+.city-picker-trigger em { align-self:flex-end; margin-top:-22px; color:var(--muted); font-style:normal; }
+.travel-field { display:flex; flex-direction:column; gap:5px; }
+.travel-field small { color:var(--muted); font-size:10px; }
+.travel-field input, .travel-field select { min-width:150px; padding:10px 12px; border:1px solid var(--border); border-radius:12px; background:var(--card); color:var(--ink); font-size:14px; }
+.travel-field.static b { padding:10px 12px; border:1px solid transparent; font-size:14px; }
+.travel-submit { margin-left:auto; min-height:44px; padding:0 26px; border:0; border-radius:12px; background:var(--teal-dark); color:#fff; font-size:14px; cursor:pointer; }
+.travel-submit:disabled { opacity:.6; cursor:wait; }
+.travel-section-head { display:flex; flex-wrap:wrap; align-items:baseline; gap:14px; margin:34px 0 18px; padding-bottom:14px; border-bottom:1px solid var(--border-soft); }
+.travel-section-head small { color:var(--meta); font:600 10px/1 var(--font-geist-mono),monospace; letter-spacing:.16em; }
+.travel-section-head h2 { margin:0; font:500 26px/1.15 Georgia,"Songti SC",serif; color:var(--ink); }
+.travel-section-head span { margin-left:auto; color:var(--muted-2); font-size:11px; }
+.travel-empty { max-width:1240px; margin:40px auto 0; padding:44px 42px; color:var(--muted); font-size:13px; line-height:1.8; }
+.travel-notice { max-width:1240px; margin:26px auto 0; padding:20px 24px; border:1px solid var(--border); border-left:4px solid var(--gold); border-radius:12px; background:var(--surface-warm); }
+.travel-notice b { color:var(--ink); font-size:14px; }
+.travel-notice p { margin:8px 0 4px; color:var(--muted); font-size:13px; }
+.travel-notice small { color:var(--muted-2); font-size:11px; }
+.travel-footer { max-width:1240px; margin:50px auto 0; padding:20px 42px 60px; color:var(--muted-2); font-size:11px; }
+
+/* ── 航班结果 ── */
+.flight-results, .stay-results { max-width:1240px; margin:0 auto; padding:0 42px; }
+.flight-card { display:flex; align-items:center; justify-content:space-between; gap:20px; margin-bottom:10px; padding:18px 20px; border:1px solid var(--border-soft); border-radius:14px; background:var(--card); }
+.flight-route { display:flex; align-items:center; gap:26px; flex:1; }
+.flight-route > div:not(.flight-line) { display:flex; flex-direction:column; gap:3px; min-width:110px; }
+.flight-route small { color:var(--muted-2); font-size:10px; }
+.flight-route b { font-size:20px; color:var(--ink); }
+.flight-route span { font-size:13px; color:var(--ink); }
+.flight-route em { font-style:normal; font-size:11px; color:var(--muted); }
+.flight-line { display:flex; flex-direction:column; align-items:center; gap:4px; flex:1; }
+.flight-line i { color:var(--teal); font-style:normal; font-size:16px; }
+.flight-line small { font-size:10px; }
+.flight-price { display:flex; flex-direction:column; align-items:flex-end; gap:3px; min-width:120px; }
+.flight-price b { font-size:22px; color:var(--teal-dark); }
+.flight-price small { color:var(--muted-2); font-size:10px; }
+.flight-price em { padding:2px 8px; border-radius:999px; background:var(--teal-soft); color:var(--teal-dark); font-size:10px; font-style:normal; }
+
+/* ── 城市选择页 ── */
+.city-picker-overlay { position:fixed; inset:0; z-index:200; display:flex; justify-content:center; align-items:flex-start; padding:7vh 20px 20px; background:rgba(10,20,22,.55); }
+.city-picker { width:min(640px,100%); max-height:82vh; overflow:auto; padding:22px 24px 26px; border-radius:18px; background:var(--surface); box-shadow:var(--elev-raised); }
+.city-picker header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+.city-picker header b { font:600 18px/1.2 Georgia,"Songti SC",serif; color:var(--ink); }
+.city-picker header button { width:36px; height:36px; border:0; border-radius:50%; background:var(--surface-warm); color:var(--muted); font-size:18px; cursor:pointer; }
+.city-search { display:flex; align-items:center; gap:8px; padding:10px 14px; border:1px solid var(--border); border-radius:12px; background:var(--card); }
+.city-search input { flex:1; border:0; outline:none; background:transparent; color:var(--ink); font-size:14px; }
+.city-picker section, .city-popular, .city-list { margin-top:16px; }
+.city-popular small, .city-list small { display:block; margin-bottom:8px; color:var(--muted-2); font-size:10px; letter-spacing:.1em; }
+.city-popular div, .city-list div { display:flex; flex-wrap:wrap; gap:8px; }
+.city-popular button { padding:8px 16px; border:1px solid var(--border); border-radius:999px; background:var(--card); color:var(--ink); font-size:13px; cursor:pointer; }
+.city-popular button:hover { border-color:var(--teal); color:var(--teal-dark); }
+.city-list { border-top:1px solid var(--border-soft); padding-top:14px; }
+.city-list button { display:flex; align-items:center; justify-content:space-between; width:calc(33.33% - 6px); min-width:130px; padding:9px 12px; border:0; border-radius:10px; background:transparent; color:var(--ink); font-size:13px; text-align:left; cursor:pointer; }
+.city-list button:hover { background:var(--teal-soft); }
+.city-list button em { color:var(--muted-2); font-size:10px; font-style:normal; }
+
+/* ── 住宿结果 ── */
+.stay-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:16px; }
+.stay-card { overflow:hidden; border:1px solid var(--border-soft); border-radius:16px; background:var(--card); }
+.stay-cover { height:180px; background:var(--bg-deep); }
+.stay-cover img { width:100%; height:100%; object-fit:cover; display:block; }
+.stay-cover.placeholder { display:grid; place-items:center; }
+.stay-cover.placeholder span { width:52px; height:52px; display:grid; place-items:center; border-radius:50%; background:var(--teal-soft); color:var(--teal-dark); font:600 20px/1 Georgia,serif; }
+.stay-body { padding:16px 18px 18px; }
+.stay-head { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+.stay-head h3 { margin:0; font-size:15px; line-height:1.4; color:var(--ink); }
+.stay-stars { color:var(--gold); font-size:12px; white-space:nowrap; }
+.stay-meta { display:flex; flex-direction:column; gap:3px; margin:8px 0 0; color:var(--muted); font-size:11px; line-height:1.6; }
+.stay-tags { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+.stay-tags i { padding:3px 9px; border-radius:999px; background:var(--surface-warm); color:var(--muted); font-size:10px; font-style:normal; }
+.stay-foot { display:flex; align-items:center; justify-content:space-between; margin-top:14px; padding-top:12px; border-top:1px solid var(--border-soft); }
+.stay-price { display:flex; align-items:baseline; gap:5px; }
+.stay-price b { font-size:20px; color:var(--teal-dark); }
+.stay-price small { color:var(--muted-2); font-size:10px; }
+.stay-book { padding:9px 14px; border-radius:10px; background:var(--teal-dark); color:#fff; font-size:12px; text-decoration:none; }
+.stay-book:hover { opacity:.92; }
+
+/* ── 停留点选择列表 ── */
+.stay-picker-list { max-width:1240px; margin:0 auto; padding:26px 42px 60px; display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:10px; }
+.stay-picker-list a { display:grid; grid-template-columns:auto 1fr auto; grid-template-areas:"dot name arrow" "dot meta arrow"; gap:2px 10px; align-items:center; padding:14px 16px; border:1px solid var(--border-soft); border-radius:14px; background:var(--card); color:var(--ink); text-decoration:none; }
+.stay-picker-list a:hover { transform:translateY(-2px); box-shadow:var(--elev-raised); }
+.stay-picker-list .category-dot { grid-area:dot; width:10px; height:10px; border-radius:50%; }
+.category-dot[data-category="scenic"] { background:var(--gold); }
+.category-dot[data-category="city"] { background:var(--teal); }
+.category-dot[data-category="supply"] { background:var(--blue); }
+.stay-picker-list b { grid-area:name; font-size:14px; }
+.stay-picker-list small { grid-area:meta; color:var(--muted); font-size:11px; }
+.stay-picker-list em { grid-area:arrow; color:var(--teal-dark); font-size:12px; font-style:normal; }
+
+@media (max-width:900px) {
+  .travel-services { grid-template-columns:1fr; }
+  .travel-header { padding:64px 5vw 26px; }
+  .travel-form, .flight-results, .stay-results, .stay-picker-list, .travel-empty, .travel-notice { padding-left:5vw; padding-right:5vw; }
+  .travel-controls { flex-direction:column; align-items:stretch; }
+  .travel-field input, .travel-field select, .city-picker-trigger { width:100%; min-width:0; }
+  .travel-submit { margin-left:0; }
+  .flight-card { flex-direction:column; align-items:stretch; }
+  .flight-price { flex-direction:row; align-items:center; gap:10px; min-width:0; }
+  .flight-route { gap:14px; }
+  .travel-service-actions { grid-template-columns:1fr; }
+  .city-list button { width:calc(50% - 5px); }
+  .stay-grid { grid-template-columns:1fr; }
+}

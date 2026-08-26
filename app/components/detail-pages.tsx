@@ -48,12 +48,14 @@ function DetailPager({ previous, next, progress }:{ previous?:{ href:string; eye
   </nav>;
 }
 
-export function PoiDetailPage({ detail, tripBase, tripName, poiOrder, places }:{ detail:PoiDetail; tripBase:string; tripName:string; poiOrder:readonly string[]; places:Place[] }) {
+export function PoiDetailPage({ detail, tripBase, tripName, poiOrder, places, terminalPlaceId }:{ detail:PoiDetail; tripBase:string; tripName:string; poiOrder:readonly string[]; places:Place[]; terminalPlaceId?:string }) {
   const copy = categoryCopy[detail.place.category];
   const dayPlaces = places.filter((p)=>p.day===detail.place.day && p.id!==detail.place.id).slice(0,4);
   const orderIndex = poiOrder.indexOf(detail.place.id);
   const previousPlace = orderIndex > 0 ? places.find((place)=>place.id===poiOrder[orderIndex-1]) : undefined;
   const nextPlace = orderIndex >= 0 && orderIndex < poiOrder.length-1 ? places.find((place)=>place.id===poiOrder[orderIndex+1]) : undefined;
+  const isTerminal = terminalPlaceId !== undefined && detail.place.id === terminalPlaceId;
+  const showStay = !isTerminal && detail.place.category !== "warning";
   return <main className={`detail-shell detail-${copy.className}`}>
     <DetailHeader eyebrow={`${detail.kindLabel} · D${detail.place.day}`} title={detail.place.name} subtitle={`${detail.place.region} · ${detail.place.subtitle}`} icon={detail.icon} className={copy.className} tripBase={tripBase} />
     <div className="detail-content">
@@ -69,6 +71,26 @@ export function PoiDetailPage({ detail, tripBase, tripName, poiOrder, places }:{
       <section className="stat-ribbon">
         {detail.stats.map((stat)=><div key={stat.label}><small>{stat.label}</small><strong>{stat.value}</strong></div>)}
       </section>
+
+      {(isTerminal || showStay) && (
+        <section className="travel-services" aria-label="出行服务">
+          <div className="travel-services-head">
+            <span>✈</span>
+            <div><small>TRAVEL DESK · 实时出行服务</small><h2>{isTerminal ? "从这里出发" : "在这里过夜"}</h2></div>
+          </div>
+          {isTerminal ? (
+            <div className="travel-service-actions">
+              <a href={`${tripBase}/flights?direction=outbound`}><b>查询去程航班</b><small>我的城市 → {detail.place.name} · 实时票价</small><em>→</em></a>
+              <a href={`${tripBase}/flights?direction=return`}><b>查询回程航班</b><small>{detail.place.name} → 我的城市 · 实时票价</small><em>→</em></a>
+            </div>
+          ) : (
+            <div className="travel-service-actions">
+              <a href={`${tripBase}/stay?place=${detail.place.id}&type=hotel`}><b>查询酒店</b><small>{detail.place.name}周边 · 实时房价房态</small><em>→</em></a>
+              <a href={`${tripBase}/stay?place=${detail.place.id}&type=minsu`}><b>查询民宿</b><small>客栈 · 青旅 · 小院 · 实时房价</small><em>→</em></a>
+            </div>
+          )}
+        </section>
+      )}
 
       <section className="story-grid">
         <div className="story-main">

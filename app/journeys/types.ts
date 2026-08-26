@@ -15,6 +15,10 @@ export type Place = {
   booking?: string;
   description: string;
   tips: string[];
+  /** 酒店/民宿搜索使用的地点名；未设置时用 name。小城镇/景点可回退到可解析的上级地名。 */
+  staySearch?: string;
+  /** 酒店/民宿搜索的地点类型；未设置时按 category 推导（scenic→景点，其余→城市）。 */
+  stayPlaceType?: "城市" | "景点";
 };
 
 export type TripDay = {

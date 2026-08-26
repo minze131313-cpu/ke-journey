@@ -27,5 +27,5 @@ export default async function Page({ params }:{ params:Promise<{journey:string;i
   const journey = getJourney(slug);
   const detail = journey?.poiDetails[id];
   if (!journey || !detail) notFound();
-  return <PoiDetailPage detail={detail} tripBase={`/${slug}`} tripName={journey.title} poiOrder={journey.poiOrder} places={journey.trip.places} />;
+  return <PoiDetailPage detail={detail} tripBase={`/${slug}`} tripName={journey.title} poiOrder={journey.poiOrder} places={journey.trip.places} terminalPlaceId={journey.config.terminalPlaceId} />;
 }
