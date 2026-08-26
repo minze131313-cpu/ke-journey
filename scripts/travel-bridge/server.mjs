@@ -78,7 +78,7 @@ const server = createServer(async (req, res) => {
     send(res, 204, {});
     return;
   }
-  if (req.method === "POST" && pathname === "/flight") {
+  if (req.method === "POST" && (pathname === "/flight" || pathname === "/")) {
     try {
       const body = await readJson(req);
       const departureCityName = String(body.departureCityName ?? "").trim();
