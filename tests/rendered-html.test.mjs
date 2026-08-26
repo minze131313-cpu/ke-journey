@@ -136,6 +136,19 @@ test("serves WebP srcset variants with JPG fallbacks", async () => {
   assert.match(home, /\/detail\/opt\/qinghai\.\d+\.webp \d+w/);
 });
 
+test("renders the theme switcher with anti-flash boot script on every page", async () => {
+  const home = await htmlFor("/");
+  assert.match(home, /切换界面主题/);
+  assert.match(home, /杂志暖白/);
+  assert.match(home, /ke-journey-theme/);
+  assert.match(home, /viewport-fit=cover/);
+  const loop = await htmlFor("/qinggan-loop");
+  assert.match(loop, /切换界面主题/);
+  assert.match(loop, /ke-journey-theme/);
+  const detail = await htmlFor("/qinggan-loop/poi/mogao");
+  assert.match(detail, /切换界面主题/);
+});
+
 test("redirects legacy unprefixed route and poi URLs for static hosting", async () => {
   // 静态托管环境没有服务端 301：旧链接页面用 canonical + 客户端跳转衔接。
   const route = await render("/route/11");

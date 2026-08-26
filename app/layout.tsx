@@ -1,7 +1,8 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import TextSizeToggle from './components/text-size-toggle';
+import ThemeSwitcher from './components/theme-switcher';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -21,6 +22,16 @@ export const metadata: Metadata = {
   openGraph:{ siteName:"KE Journey", locale:"zh_CN", type:"website", images:[{ url:"/og.jpg", alt:"KE Journey 青甘大环线旅行路书" }] },
 };
 
+// viewport-fit=cover：让 iOS 刘海屏/Home 指示条下 env(safe-area-inset-*) 真正生效
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
+// 首帧前恢复主题，避免暗色用户看到白闪（FOUC）
+const themeBootScript = `try{var t=localStorage.getItem('ke-journey-theme');if(t==='alpine'||t==='dusk'){document.documentElement.dataset.theme=t;}}catch(e){}`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -31,7 +42,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
         {children}
+        <ThemeSwitcher />
         <TextSizeToggle />
       </body>
     </html>

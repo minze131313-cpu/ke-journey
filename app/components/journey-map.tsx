@@ -60,6 +60,13 @@ function loadAmap() {
   });
 }
 
+// 主题 → 高德内置底图风格
+function amapStyleForTheme(theme: string | undefined): string {
+  if (theme === "dusk") return "amap://styles/dark";
+  if (theme === "alpine") return "amap://styles/fresh";
+  return "amap://styles/whitesmoke";
+}
+
 function markerContent(place: Place, terminalPlaceId: string) {
   if (place.id === terminalPlaceId) {
     return `<button class="loop-terminal-pin" aria-label="环线起点和终点：${place.name}"><span><i>起</i><i>终</i></span><b>${place.name}</b><small>环线起终点</small></button>`;
@@ -110,7 +117,7 @@ export default function JourneyMap({ journey }: { journey: Journey }) {
       const map = new AMap.Map(mapNode.current, {
         zoom: config.mapZoom,
         center: config.mapCenter,
-        mapStyle: "amap://styles/whitesmoke",
+        mapStyle: amapStyleForTheme(document.documentElement.dataset.theme),
         viewMode: "3D",
         pitch: 18,
         rotateEnable: false,
@@ -236,6 +243,21 @@ export default function JourneyMap({ journey }: { journey: Journey }) {
       markersRef.current.clear();
       routesRef.current.clear();
     };
+  }, []);
+
+  // 主题切换时同步高德底图风格
+  useEffect(() => {
+    const onThemeChange = (event: Event) => {
+      const detail = (event as CustomEvent<{ theme: string }>).detail;
+      if (!mapRef.current) return;
+      try {
+        mapRef.current.setMapStyle(amapStyleForTheme(detail?.theme));
+      } catch {
+        // 部分官方风格名需要重建地图，失败时保持当前底图
+      }
+    };
+    window.addEventListener("ke-journey:theme-change", onThemeChange);
+    return () => window.removeEventListener("ke-journey:theme-change", onThemeChange);
   }, []);
 
   useEffect(() => {
