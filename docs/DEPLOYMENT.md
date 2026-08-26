@@ -82,11 +82,36 @@ location ~* \.(?:css|js|jpg|jpeg|png|gif|webp|svg|ico|woff2?)$ {
 当前做法：改配置 → `nginx -t`（nginx:1.24 容器校验）→ API 重启 VPS。
 配置文件旁保留 `.bak-<时间戳>` 备份。
 
+## 出行服务 API 反向代理（/api/）
+
+航班与酒店/民宿的实时数据经同源 `/api/` 转发到 RollingGo 代理
+（腾讯云函数 `https://1439498936-460a7b6oqn.ap-guangzhou.tencentscf.com`）：
+
+```nginx
+location /api/ {
+    proxy_pass https://1439498936-460a7b6oqn.ap-guangzhou.tencentscf.com/;
+    proxy_ssl_server_name on;
+    proxy_set_header Host 1439498936-460a7b6oqn.ap-guangzhou.tencentscf.com;
+    proxy_set_header X-Proxy-Token tp_8k2mX9vQ4z;   # 上游代理 token，仅存于 VPS nginx 配置
+    proxy_set_header Content-Type application/json;
+    if ($request_method = OPTIONS) { return 204; }
+}
+```
+
+- 浏览器只访问同源 `/api/`，上游 token 不出现在前端代码与仓库中。
+- 本地开发由 vite `server.proxy` 承担，token 从 `.env.local` 的
+  `ROLLINGGO_PROXY_TOKEN` 读取（`vite.config.ts` 已配置）。
+- 前端封装见 `app/lib/travel-api.ts`；上游接口类型：`hotel_search`、
+  `hotel_detail`、`hotel_search_tags`（可用）与 `flight`、`flight_airport`
+  （上游自 2026-07-27 起暂停升级，返回 SERVICE_UNAVAILABLE，恢复后无需改动）。
+- 若上游代理地址/token 变更，同时更新：VPS nginx 配置、本地 `.env.local`、
+  `app/lib/travel-api.ts` 注释与本文档。
+
 ## 上线验证清单
 
 ```bash
 curl -s https://ke-journey.bordy.cn/robots.txt | head        # 纯文本 robots
-curl -s https://ke-journey.bordy.cn/sitemap.xml | head       # XML，39+ 条 URL
+curl -s https://ke-journey.bordy.cn/sitemap.xml | head       # XML，41 条 URL
 curl -s -o /dev/null -w "%{http_code}" https://ke-journey.bordy.cn/nonexistent  # 404
 curl -s -o /dev/null -w "%{http_code} %{redirect_url}" https://ke-journey.bordy.cn/poi/mogao  # 301
 curl -s https://ke-journey.bordy.cn/qinggan-loop/ | grep -c 'type="image/webp"'  # ≥1
