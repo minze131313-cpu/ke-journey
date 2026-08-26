@@ -49,16 +49,16 @@ function runTuniu(args) {
     child.on("error", (error) => reject(new Error(`无法启动途牛服务: ${error.message}`)));
     child.on("close", (code) => {
       clearTimeout(timer);
-      if (code === 0) {
-        try {
-          resolve(JSON.parse(stdout));
-        } catch {
-          reject(new Error("途牛返回无法解析"));
-        }
-      } else {
-        const message = (stderr || stdout || "").trim().slice(0, 300) || `途牛服务退出码 ${code}`;
-        reject(new Error(message));
+      // 途牛 CLI 对业务失败（如无航班）会以非零码退出，但 stdout 仍是合法 JSON：
+      // 优先解析 stdout，能解析就把业务结果原样上抛，由调用方判断。
+      try {
+        resolve(JSON.parse(stdout));
+        return;
+      } catch {
+        // 继续走错误分支
       }
+      const message = (stderr || stdout || "").trim().slice(0, 300) || `途牛服务退出码 ${code}`;
+      reject(new Error(message));
     });
   });
 }
