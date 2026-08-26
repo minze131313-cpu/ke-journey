@@ -51,6 +51,10 @@ export default defineConfig(async () => {
       // 出行服务：本地开发时把 /api/ 转发到 RollingGo 代理（线上由 VPS nginx 承担）。
       // 上游 token 从本地 .env.local 的 ROLLINGGO_PROXY_TOKEN 读取，不进仓库。
       proxy: {
+        "/api/flight": {
+          target: "http://127.0.0.1:8787",
+          rewrite: (path) => path.replace(/^\/api\/flight/, "/flight"),
+        },
         "/api": {
           target: "https://1439498936-460a7b6oqn.ap-guangzhou.tencentscf.com",
           changeOrigin: true,

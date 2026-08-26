@@ -8,11 +8,6 @@ export type FlightParams = {
   from: string;
   to: string;
   date: string;
-  tripType?: "ONE_WAY" | "ROUND_TRIP";
-  retDate?: string;
-  cabin?: "ECONOMY" | "BUSINESS" | "FIRST";
-  adults?: number;
-  children?: number;
 };
 
 export type FlightSummary = {
@@ -69,15 +64,6 @@ export class TravelApiError extends Error {
   constructor(code: string, message: string) {
     super(message);
     this.code = code;
-  }
-}
-
-/** 机票上游暂停（RollingGo 2026-07-27 起架构升级）。 */
-export class FlightUnavailableError extends TravelApiError {
-  suggestion: string;
-  constructor(message: string, suggestion: string) {
-    super("SERVICE_UNAVAILABLE", message);
-    this.suggestion = suggestion;
   }
 }
 
@@ -138,24 +124,70 @@ async function callProxy(type: string, params: Record<string, unknown>): Promise
   return body?.data ?? null;
 }
 
+// 航班查询走途牛桥接服务（VPS 常驻容器 + nginx /api/flight/ 转发；
+// 本地开发由 vite 代理到 127.0.0.1:8787 的本地桥接）。
+// 途牛上游返回结构：data[] { flightNumber, airlineCompany, departureTime, arrivalTime,
+//   departureAirport, arrivalAirport, cabinClass, remainingSeats, type, basePrice, totalTax }
+type TuniuFlightRaw = {
+  flightNumber?: string;
+  airlineCompany?: string;
+  departureTime?: string;
+  arrivalTime?: string;
+  departureAirport?: string;
+  arrivalAirport?: string;
+  cabinClass?: string;
+  remainingSeats?: string;
+  type?: string;
+  basePrice?: string | number;
+  totalTax?: string | number;
+};
+
+type FlightBridgeResponse = {
+  success?: boolean;
+  data?: TuniuFlightRaw[];
+  error?: { code?: number | string; message?: string };
+};
+
+function clockOf(datetime?: string): string | undefined {
+  if (!datetime) return undefined;
+  const match = /(\d{2}:\d{2})$/.exec(datetime);
+  return match ? match[1] : datetime;
+}
+
 export async function searchFlights(params: FlightParams): Promise<FlightSummary[]> {
-  const data = await callProxy("flight", {
-    from: params.from,
-    to: params.to,
-    date: params.date,
-    tripType: params.tripType ?? "ONE_WAY",
-    retDate: params.retDate,
-    cabin: params.cabin ?? "ECONOMY",
-    adults: params.adults ?? 1,
-    children: params.children ?? 0,
-  });
-  if (data && (data.error === "SERVICE_UNAVAILABLE" || data.code === "SERVICE_UNAVAILABLE" || /暂停|SERVICE_UNAVAILABLE/i.test(data.message ?? ""))) {
-    throw new FlightUnavailableError(data.message || "机票服务暂停升级中", data.suggestion || "请切换至途牛或同程数据源查询机票");
+  let response: Response;
+  try {
+    response = await fetch("/api/flight/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ departureCityName: params.from, arrivalCityName: params.to, departureDate: params.date }),
+    });
+  } catch {
+    throw new TravelApiError("NETWORK", "航班服务暂时无法连接，请稍后再试");
   }
-  if (data && data.flightList && Array.isArray(data.flightList)) return data.flightList;
-  if (Array.isArray(data)) return data as FlightSummary[];
-  if (data && Array.isArray(data.list)) return data.list;
-  return [];
+  if (!response.ok) {
+    throw new TravelApiError("HTTP_" + response.status, `航班服务返回异常（${response.status}）`);
+  }
+  const body = (await response.json()) as FlightBridgeResponse;
+  if (body?.success !== true) {
+    throw new TravelApiError(String(body?.error?.code ?? "UNKNOWN"), body?.error?.message ?? "航班查询失败");
+  }
+  return (body.data ?? []).map((raw) => ({
+    flightNo: raw.flightNumber,
+    airline: raw.airlineCompany,
+    airlineName: raw.airlineCompany,
+    departTime: clockOf(raw.departureTime),
+    arriveTime: clockOf(raw.arrivalTime),
+    departAirport: raw.departureAirport,
+    arriveAirport: raw.arrivalAirport,
+    departCity: params.from,
+    arriveCity: params.to,
+    stops: raw.type === "直飞" ? 0 : (raw.type ?? ""),
+    stopCities: raw.type,
+    price: Number(raw.basePrice ?? 0) + Number(raw.totalTax ?? 0),
+    cabinLabel: raw.cabinClass,
+    tag: raw.remainingSeats != null ? `余座 ${raw.remainingSeats}` : undefined,
+  }));
 }
 
 export async function searchHotels(params: HotelSearchParams): Promise<HotelSummary[]> {

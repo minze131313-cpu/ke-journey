@@ -6,7 +6,6 @@ import {
   flightCities,
   popularDepartureCities,
   searchFlights,
-  FlightUnavailableError,
   type FlightSummary,
 } from "../lib/travel-api";
 
@@ -39,13 +38,10 @@ export default function FlightSearch({
     return new URLSearchParams(window.location.search).get("from") ?? "";
   });
   const [date, setDate] = useState(todayPlus(14));
-  const [cabin, setCabin] = useState("ECONOMY");
-  const [adults, setAdults] = useState(1);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "error" | "ok">("idle");
   const [flights, setFlights] = useState<FlightSummary[]>([]);
-  const [unavailable, setUnavailable] = useState<{ message: string; suggestion: string } | null>(null);
   const [errorText, setErrorText] = useState("");
 
   const runSearch = useCallback(async (fromValue: string) => {
@@ -55,7 +51,6 @@ export default function FlightSearch({
     }
     setStatus("loading");
     setFlights([]);
-    setUnavailable(null);
     setErrorText("");
     try {
       const terminal = terminalName;
@@ -63,22 +58,14 @@ export default function FlightSearch({
         from: direction === "outbound" ? fromValue : terminal,
         to: direction === "outbound" ? terminal : fromValue,
         date,
-        tripType: "ONE_WAY",
-        cabin: cabin as "ECONOMY" | "BUSINESS" | "FIRST",
-        adults,
       });
       setFlights(result);
       setStatus("ok");
     } catch (error) {
-      if (error instanceof FlightUnavailableError) {
-        setUnavailable({ message: error.message, suggestion: error.suggestion });
-        setStatus("error");
-      } else {
-        setErrorText(error instanceof Error ? error.message : "查询失败，请稍后再试");
-        setStatus("error");
-      }
+      setErrorText(error instanceof Error ? error.message : "查询失败，请稍后再试");
+      setStatus("error");
     }
-  }, [direction, terminalName, date, cabin, adults]);
+  }, [direction, terminalName, date]);
 
   const chooseCity = (name: string) => {
     setFrom(name);
@@ -95,7 +82,7 @@ export default function FlightSearch({
       <header className="travel-header">
         <Link className="back-map" href={`${tripBase}/`}><span>←</span> 返回环线地图</Link>
         <div className="travel-title-wrap">
-          <small>FLIGHT DESK · 实时航班</small>
+          <small>FLIGHT DESK · 实时航班 · 数据来源：途牛</small>
           <h1>{tripName} · 航班查询</h1>
           <p>起终点为 {terminalName}，选择你的出发城市与日期，实时查看航班与参考价格。</p>
         </div>
@@ -121,20 +108,6 @@ export default function FlightSearch({
             <small>出发日期</small>
             <input type="date" value={date} min={todayPlus(0)} onChange={(event) => setDate(event.target.value)} />
           </label>
-          <label className="travel-field">
-            <small>舱位</small>
-            <select value={cabin} onChange={(event) => setCabin(event.target.value)}>
-              <option value="ECONOMY">经济舱</option>
-              <option value="BUSINESS">公务舱</option>
-              <option value="FIRST">头等舱</option>
-            </select>
-          </label>
-          <label className="travel-field">
-            <small>乘机人</small>
-            <select value={adults} onChange={(event) => setAdults(Number(event.target.value))}>
-              {[1, 2, 3, 4].map((n) => <option key={n} value={n}>{n} 人</option>)}
-            </select>
-          </label>
           <button type="button" className="travel-submit" onClick={() => runSearch(from)} disabled={status === "loading"}>
             {status === "loading" ? "查询中…" : "查询航班"}
           </button>
@@ -143,22 +116,15 @@ export default function FlightSearch({
 
       {status === "idle" && !pickerOpen && (
         <section className="travel-empty">
-          <p>{from ? "选择日期与舱位后点击「查询航班」。" : "先选择你的出发城市，再查询飞往" + terminalName + "的航班。"}</p>
+          <p>{from ? "选择日期后点击「查询航班」。" : "先选择你的出发城市，再查询飞往" + terminalName + "的航班。"}</p>
         </section>
       )}
 
-      {unavailable && (
-        <section className="travel-notice" role="alert">
-          <b>✈ 机票服务暂停升级中</b>
-          <p>{unavailable.message}</p>
-          <small>{unavailable.suggestion}</small>
-        </section>
-      )}
-
-      {errorText && !unavailable && (
+      {errorText && (
         <section className="travel-notice" role="alert">
           <b>查询失败</b>
           <p>{errorText}</p>
+          <small>航班服务由途牛提供，可能暂时不可用，请稍后再试。</small>
         </section>
       )}
 
@@ -173,7 +139,7 @@ export default function FlightSearch({
           <div className="travel-section-head">
             <small>RESULTS</small>
             <h2>{direction === "outbound" ? `${from} → ${terminalName}` : `${terminalName} → ${from}`} · {date}</h2>
-            <span>价格为参考展示价，以出票页为准</span>
+            <span>参考价 · 含机建燃油 · 以途牛出票页为准</span>
           </div>
           {flights.map((flight, index) => (
             <article className="flight-card" key={`${flight.flightNo ?? "flight"}-${index}`}>
@@ -182,12 +148,12 @@ export default function FlightSearch({
                 <div className="flight-line">
                   <small>{flight.flightNo ?? ""} {flight.airlineName ?? flight.airline ?? ""}</small>
                   <i aria-hidden="true">→</i>
-                  <small>{flight.stops ? `经停 ${flight.stopCities ?? flight.stops}` : "直飞"}</small>
+                  <small>{flight.stops === 0 ? "直飞" : `经停 ${flight.stopCities ?? flight.stops}`}</small>
                 </div>
                 <div><small>到达</small><b>{flight.arriveTime ?? "--:--"}</b><span>{flight.arriveCity ?? (direction === "outbound" ? terminalName : from)}</span><em>{flight.arriveAirport}</em></div>
               </div>
               <div className="flight-price">
-                {flight.price != null && <b>¥{flight.price}</b>}
+                {flight.price != null && <b>¥{Math.round(flight.price)}</b>}
                 {flight.cabinLabel && <small>{flight.cabinLabel}</small>}
                 {flight.tag && <em>{flight.tag}</em>}
               </div>
