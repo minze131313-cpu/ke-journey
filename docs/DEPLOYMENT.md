@@ -82,10 +82,29 @@ location ~* \.(?:css|js|jpg|jpeg|png|gif|webp|svg|ico|woff2?)$ {
 当前做法：改配置 → `nginx -t`（nginx:1.24 容器校验）→ API 重启 VPS。
 配置文件旁保留 `.bak-<时间戳>` 备份。
 
-## 出行服务 API 反向代理（/api/）
+## 出行服务 API 反向代理（/api/ 与 /api/flight/）
 
-航班与酒店/民宿的实时数据经同源 `/api/` 转发到 RollingGo 代理
-（腾讯云函数 `https://1439498936-460a7b6oqn.ap-guangzhou.tencentscf.com`）：
+酒店/民宿实时数据经同源 `/api/` 转发到 RollingGo 代理
+（腾讯云函数 `https://1439498936-460a7b6oqn.ap-guangzhou.tencentscf.com`）；
+航班数据走 `/api/flight/` 转发到本机**途牛桥接容器**（RollingGo 机票上游
+自 2026-07-27 起暂停，途牛为现行机票数据源）。
+
+### 途牛桥接（ke-journey-api 容器）
+
+- 目录 `/opt/ke-journey-bridge/`：`server.mjs`（`scripts/travel-bridge/server.mjs`）
+  + `node_modules`（tuniu-cli 1.0.9）+ `.env`（600 权限，含 `TUNIU_API_KEY` 与
+  `TUNIU_BIN`）。桥接脚本自行加载 `.env`，不依赖 compose 注入。
+- Docker 项目 `ke-journey-api`：`node:22-alpine` + `network_mode: host` +
+  `restart: always`，监听 `127.0.0.1:8787`；重启 VPS 后自动恢复。
+- nginx：`location /api/flight/ { proxy_pass http://127.0.0.1:8787/; }`
+  （proxy_pass 带 `/` 会把路径重写为根，桥接同时接受 `/` 与 `/flight`）。
+- 更新桥接：同步新 `server.mjs` 到 `/opt/ke-journey-bridge/` 后
+  `docker/ke-journey-api/restart`。
+- 途牛对无航班航线以非零码返回 `terminated`，桥接已归一化为空结果 + hint。
+
+### RollingGo 酒店代理
+
+
 
 ```nginx
 location /api/ {
