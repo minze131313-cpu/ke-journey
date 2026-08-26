@@ -11,6 +11,8 @@
 
 线上版本：[ke-journey.bordy.cn](https://ke-journey.bordy.cn/)
 
+部署架构（Hostinger VPS + nginx 静态发布）与上线验证清单见 [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)。
+
 ## 技术栈
 
 - Next.js 16、React 19、TypeScript
