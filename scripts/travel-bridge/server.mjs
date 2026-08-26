@@ -8,9 +8,28 @@
 //       GET  /health
 import { createServer } from "node:http";
 import { spawn } from "node:child_process";
+import { existsSync, readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+
+// 自包含环境加载：优先读取同目录 .env（compose 的 env_file 在部分宿主上不生效）
+function loadDotEnv(path) {
+  try {
+    if (!existsSync(path)) return;
+    for (const line of readFileSync(path, "utf-8").split("\n")) {
+      const match = /^([A-Z_][A-Z0-9_]*)=(.*)$/.exec(line.trim());
+      if (match && process.env[match[1]] === undefined) process.env[match[1]] = match[2];
+    }
+  } catch {
+    // 环境文件不可读时沿用现有环境变量
+  }
+}
+const bridgeDir = dirname(fileURLToPath(import.meta.url));
+loadDotEnv(join(bridgeDir, ".env"));
 
 const PORT = Number(process.env.BRIDGE_PORT ?? 8787);
-const TUNIU_BIN = process.env.TUNIU_BIN ?? "tuniu";
+const localTuniu = join(bridgeDir, "node_modules", ".bin", "tuniu");
+const TUNIU_BIN = process.env.TUNIU_BIN ?? (existsSync(localTuniu) ? localTuniu : "tuniu");
 const TUNIU_TIMEOUT_MS = Number(process.env.TUNIU_TIMEOUT_MS ?? 45000);
 
 function runTuniu(args) {
