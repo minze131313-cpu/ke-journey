@@ -133,6 +133,12 @@ const server = createServer(async (req, res) => {
         send(res, 200, { success: true, data: flights });
         return;
       }
+      // 途牛对无航班航线常见返回 "terminated"：按空结果处理，而不是报错
+      const rawErrorMessage = String(raw?.error?.message ?? "");
+      if (/terminated|no flight|no result|empty/i.test(rawErrorMessage)) {
+        send(res, 200, { success: true, data: [], hint: "该航线暂无航班数据" });
+        return;
+      }
       const error = raw?.error ?? {};
       send(res, 502, { success: false, error: { code: error.code ?? 199, message: error.message ?? "途牛查询失败" } });
     } catch (error) {
