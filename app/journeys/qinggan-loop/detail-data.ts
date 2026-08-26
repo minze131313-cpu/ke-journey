@@ -1,37 +1,5 @@
-import { days, places, routeRoads, type Category, type Place, type TripDay } from "./trip-data";
-
-export type SourceLink = { name: string; publisher: string; url: string; note?: string };
-export type Stat = { label: string; value: string };
-export type StorySection = { title: string; text: string };
-export type MediaAsset = { src: string; alt: string; caption: string; credit: string; sourceUrl: string; framing?:"full"|"detail"; contextLabel?:string };
-
-export type PoiDetail = {
-  place: Place;
-  kindLabel: string;
-  icon: string;
-  hero: MediaAsset;
-  gallery: MediaAsset[];
-  lead: string;
-  stats: Stat[];
-  sections: StorySection[];
-  highlights: string[];
-  actions: string[];
-  cautions: string[];
-  sources: SourceLink[];
-};
-
-export type RouteDetail = {
-  day: TripDay;
-  hero: MediaAsset;
-  gallery: MediaAsset[];
-  roads: string;
-  lead: string;
-  stats: Stat[];
-  sections: StorySection[];
-  rhythm: { time: string; title: string; note: string }[];
-  cautions: string[];
-  sources: SourceLink[];
-};
+import { days, places, routeRoads } from "./trip-data";
+import type { Category, MediaAsset, Place, PoiDetail, RouteDetail, SourceLink } from "../types";
 
 const sources = {
   qhLake: { name:"青海湖与柴达木地理综述", publisher:"中国国家地理", url:"https://www.dili360.com/cng/article/p5350c3d6904b621.htm", note:"湖盆、盐湖与环线地理背景" },
@@ -235,3 +203,10 @@ export const routeDetails = Object.fromEntries(days.map((day) => {
   };
   return [String(day.day),detail];
 })) as Record<string,RouteDetail>;
+
+// 按真实行驶顺序的详情页前后导航顺序
+export const poiOrder = [
+  "xining","riyue","qinghai","chaka-stay","chaka","delingha","emerald","daqaidam","daqaidam-stay",
+  "u-road","yadan","aksai","dunhuang","mogao","mingsha","jiayuguan","jiayuguan-stay","jiuquan-stay",
+  "danxia","danxia-stay","zhangye","g227","sunan","qilian","gangshika",
+] as const;

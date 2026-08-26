@@ -1,34 +1,4 @@
-export type Category = "scenic" | "city" | "supply" | "warning";
-
-export type Place = {
-  id: string;
-  name: string;
-  day: number;
-  coords: [number, number];
-  category: Category;
-  region: string;
-  subtitle: string;
-  altitude?: string;
-  visit?: string;
-  booking?: string;
-  description: string;
-  tips: string[];
-};
-
-export type TripDay = {
-  day: number;
-  title: string;
-  start: string;
-  end: string;
-  km: string;
-  drive: string;
-  stay: string;
-  color: string;
-  summary: string;
-  route: [number, number][];
-  stops: string[];
-  tasks: string[];
-};
+import type { Place, TripDay } from "../types";
 
 export const routeRoads: Record<number, string> = {
   1: "西宁市区道路",

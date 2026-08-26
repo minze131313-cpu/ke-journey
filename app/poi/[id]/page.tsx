@@ -1,29 +1,13 @@
-import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import { PoiDetailPage } from "../../components/detail-pages";
-import { poiDetails } from "../../detail-data";
+import { permanentRedirect } from "next/navigation";
+import { getJourney } from "../../journeys/registry";
+
+// 旧版 /poi/:id 链接（无旅程前缀）永久重定向到青甘大环线对应节点。
 
 export function generateStaticParams() {
-  return Object.keys(poiDetails).map((id)=>({ id }));
-}
-
-export async function generateMetadata({ params }:{ params:Promise<{id:string}> }):Promise<Metadata> {
-  const { id } = await params;
-  const detail = poiDetails[id];
-  if (!detail) return { title:"节点不存在｜青甘环线" };
-  const title = `${detail.place.name}｜${detail.kindLabel}｜青甘环线`;
-  return {
-    title,
-    description:detail.lead,
-    alternates:{ canonical:`/qinggan-loop/poi/${id}/` },
-    openGraph:{ title, description:detail.lead, url:`/qinggan-loop/poi/${id}/`, images:[{ url:detail.hero.src, alt:detail.hero.alt }] },
-    twitter:{ card:"summary_large_image", title, description:detail.lead, images:[detail.hero.src] },
-  };
+  return Object.keys(getJourney("qinggan-loop")!.poiDetails).map((id) => ({ id }));
 }
 
 export default async function Page({ params }:{ params:Promise<{id:string}> }) {
   const { id } = await params;
-  const detail = poiDetails[id];
-  if (!detail) notFound();
-  return <PoiDetailPage detail={detail} />;
+  permanentRedirect(`/qinggan-loop/poi/${id}`);
 }

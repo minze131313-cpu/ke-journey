@@ -21,8 +21,11 @@ button,input { font:inherit; }
 button { color:inherit; }
 
 .journey-index { min-height:100vh; background:#efece3; }
-.journey-hero { position:relative; min-height:680px; overflow:hidden; color:#f8f4e9; background:linear-gradient(110deg,rgba(12,28,25,.93) 0%,rgba(12,39,34,.78) 46%,rgba(21,64,56,.38) 100%),url('/detail/qinghai.jpg') center 55%/cover no-repeat; }
-.journey-hero::after { content:""; position:absolute; inset:0; pointer-events:none; background:linear-gradient(180deg,rgba(0,0,0,.08),transparent 40%,rgba(4,15,13,.38)); }
+.journey-hero { position:relative; min-height:680px; overflow:hidden; color:#f8f4e9; background:linear-gradient(110deg,rgba(12,28,25,.93) 0%,rgba(12,39,34,.78) 46%,rgba(21,64,56,.38) 100%); }
+.journey-hero-bg { position:absolute; inset:0; z-index:0; }
+.journey-hero-bg picture,.journey-hero-bg img { width:100%; height:100%; display:block; object-fit:cover; object-position:center 55%; }
+.journey-hero::before { content:""; position:absolute; inset:0; z-index:1; pointer-events:none; background:linear-gradient(110deg,rgba(12,28,25,.93) 0%,rgba(12,39,34,.78) 46%,rgba(21,64,56,.38) 100%); }
+.journey-hero::after { content:""; position:absolute; inset:0; z-index:1; pointer-events:none; background:linear-gradient(180deg,rgba(0,0,0,.08),transparent 40%,rgba(4,15,13,.38)); }
 .journey-nav { position:relative; z-index:2; height:92px; display:flex; align-items:center; justify-content:space-between; margin:0 auto; padding:0 6vw; border-bottom:1px solid rgba(255,255,255,.18); }
 .journey-logo { display:flex; align-items:center; gap:12px; color:inherit; text-decoration:none; }
 .journey-logo span { width:44px; height:44px; display:grid; place-items:center; border:1px solid rgba(255,255,255,.55); border-radius:50%; font:700 13px/1 Georgia,serif; letter-spacing:.06em; }
@@ -565,3 +568,19 @@ html,body { max-width:100%; overflow-x:hidden; }
   .pager-card { padding:8px 10px; }.pager-card small { font-size:8px; }.pager-card b { font-size:13px; }
   .detail-shell ~ .text-size-toggle,.app-shell ~ .text-size-toggle { min-width:68px; padding:0 10px; }.text-size-toggle span { font-size:15px; }.text-size-toggle b { font-size:10px; }
 }
+
+/* 404 page */
+.not-found-shell { min-height:100vh; position:relative; display:grid; place-items:center; overflow:hidden; background:linear-gradient(140deg,var(--paper) 0%,#f4ecdd 55%,#e9e3d2 100%); }
+.not-found-shell::before { content:""; position:absolute; inset:0; background:url('/detail/qilian.jpg') center 62%/cover no-repeat; opacity:.14; filter:saturate(.8); }
+.not-found-stamp { position:absolute; top:6vh; right:7vw; width:124px; height:124px; display:flex; flex-direction:column; align-items:center; justify-content:center; border:1px solid rgba(22,52,58,.3); border-radius:50%; transform:rotate(-8deg); }
+.not-found-stamp b { font:600 34px/1 Georgia,serif; color:var(--teal-dark); }
+.not-found-stamp span { margin-top:8px; font-size:7px; letter-spacing:.2em; color:var(--muted); }
+.not-found-copy { position:relative; z-index:2; width:min(680px,88vw); text-align:center; }
+.not-found-copy p { margin:0 0 20px; color:#a16f2a; font:600 11px/1 var(--font-geist-mono),monospace; letter-spacing:.2em; }
+.not-found-copy h1 { margin:0 0 22px; font:500 clamp(36px,5.4vw,62px)/1.12 Georgia,"Songti SC",serif; color:var(--ink); }
+.not-found-copy > span { display:block; margin:0 auto 36px; max-width:430px; color:var(--muted); font-size:14px; line-height:1.9; }
+.not-found-actions { display:flex; gap:14px; justify-content:center; flex-wrap:wrap; }
+.not-found-actions a { display:inline-flex; align-items:center; padding:13px 22px; border:1px solid rgba(22,52,58,.35); border-radius:2px; font-size:12px; text-decoration:none; letter-spacing:.06em; color:var(--ink); }
+.not-found-actions a.primary { background:var(--teal-dark); border-color:var(--teal-dark); color:#f8f4e9; }
+.not-found-actions a:hover { opacity:.88; }
+@media (max-width:640px) { .not-found-stamp { display:none; } .not-found-copy { text-align:left; } .not-found-actions { justify-content:flex-start; } }

@@ -1,15 +1,6 @@
-import type { PoiDetail, RouteDetail } from "../detail-data";
-import { days, places } from "../trip-data";
+import type { Place, PoiDetail, RouteDetail, TripDay } from "../journeys/types";
 import Link from "next/link";
 import DetailMediaCarousel from "./detail-media-carousel";
-
-const tripBase = "/qinggan-loop";
-
-const poiOrder = [
-  "xining","riyue","qinghai","chaka-stay","chaka","delingha","emerald","daqaidam","daqaidam-stay",
-  "u-road","yadan","aksai","dunhuang","mogao","mingsha","jiayuguan","jiayuguan-stay","jiuquan-stay",
-  "danxia","danxia-stay","zhangye","g227","sunan","qilian","gangshika",
-] as const;
 
 const categoryCopy = {
   scenic: { action:"游览策略", highlight:"值得停留", caution:"现场边界", className:"scenic" },
@@ -30,7 +21,7 @@ function Sources({ items }:{ items:PoiDetail["sources"] }) {
   </section>;
 }
 
-function DetailHeader({ eyebrow,title,subtitle,icon,className }:{ eyebrow:string;title:string;subtitle:string;icon:string;className:string }) {
+function DetailHeader({ eyebrow,title,subtitle,icon,className,tripBase }:{ eyebrow:string;title:string;subtitle:string;icon:string;className:string;tripBase:string }) {
   return <header className={`detail-header ${className}`}>
     <a className="back-map" href={`${tripBase}/`}><span>←</span> 返回环线地图</a>
     <Link className="route-index" href="/">KE JOURNEY · 全部旅程</Link>
@@ -41,7 +32,7 @@ function DetailHeader({ eyebrow,title,subtitle,icon,className }:{ eyebrow:string
   </header>;
 }
 
-function DetailMobileNav({ day }:{ day:number }) {
+function DetailMobileNav({ day, tripBase }:{ day:number; tripBase:string }) {
   return <nav className="detail-mobile-nav" aria-label="详情页快捷导航">
     <a href={`${tripBase}/`}><i>⌖</i><span>地图</span></a>
     <a href={`${tripBase}/route/${day}`}><i>D{day}</i><span>当天线路</span></a>
@@ -57,14 +48,14 @@ function DetailPager({ previous, next, progress }:{ previous?:{ href:string; eye
   </nav>;
 }
 
-export function PoiDetailPage({ detail }:{ detail:PoiDetail }) {
+export function PoiDetailPage({ detail, tripBase, tripName, poiOrder, places }:{ detail:PoiDetail; tripBase:string; tripName:string; poiOrder:readonly string[]; places:Place[] }) {
   const copy = categoryCopy[detail.place.category];
   const dayPlaces = places.filter((p)=>p.day===detail.place.day && p.id!==detail.place.id).slice(0,4);
-  const orderIndex = poiOrder.indexOf(detail.place.id as (typeof poiOrder)[number]);
+  const orderIndex = poiOrder.indexOf(detail.place.id);
   const previousPlace = orderIndex > 0 ? places.find((place)=>place.id===poiOrder[orderIndex-1]) : undefined;
   const nextPlace = orderIndex >= 0 && orderIndex < poiOrder.length-1 ? places.find((place)=>place.id===poiOrder[orderIndex+1]) : undefined;
   return <main className={`detail-shell detail-${copy.className}`}>
-    <DetailHeader eyebrow={`${detail.kindLabel} · D${detail.place.day}`} title={detail.place.name} subtitle={`${detail.place.region} · ${detail.place.subtitle}`} icon={detail.icon} className={copy.className} />
+    <DetailHeader eyebrow={`${detail.kindLabel} · D${detail.place.day}`} title={detail.place.name} subtitle={`${detail.place.region} · ${detail.place.subtitle}`} icon={detail.icon} className={copy.className} tripBase={tripBase} />
     <div className="detail-content">
       <section className="hero-grid">
         <DetailMediaCarousel items={detail.gallery} title={detail.place.name} />
@@ -123,19 +114,19 @@ export function PoiDetailPage({ detail }:{ detail:PoiDetail }) {
       previous={previousPlace ? { href:`${tripBase}/poi/${previousPlace.id}`, eyebrow:`D${previousPlace.day}`, title:previousPlace.name } : undefined}
       next={nextPlace ? { href:`${tripBase}/poi/${nextPlace.id}`, eyebrow:`D${nextPlace.day}`, title:nextPlace.name } : undefined}
     />
-    <footer className="detail-footer"><a href={`${tripBase}/`}>← 回到地图继续规划</a><span>青甘环线自驾地图 · KE Journey</span></footer>
-    <DetailMobileNav day={detail.place.day} />
+    <footer className="detail-footer"><a href={`${tripBase}/`}>← 回到地图继续规划</a><span>{tripName}自驾地图 · KE Journey</span></footer>
+    <DetailMobileNav day={detail.place.day} tripBase={tripBase} />
   </main>;
 }
 
-export function RouteDetailPage({ detail }:{ detail:RouteDetail }) {
+export function RouteDetailPage({ detail, tripBase, tripName, places, days }:{ detail:RouteDetail; tripBase:string; tripName:string; places:Place[]; days:TripDay[] }) {
   const stops = detail.day.stops.map((id)=>places.find((p)=>p.id===id)).filter(Boolean);
   const previousDay = detail.day.day > 1 ? detail.day.day-1 : undefined;
   const nextDay = detail.day.day < 12 ? detail.day.day+1 : undefined;
   const previousRoute = previousDay ? days[previousDay-1] : undefined;
   const nextRoute = nextDay ? days[nextDay-1] : undefined;
   return <main className="detail-shell detail-route">
-    <DetailHeader eyebrow={`线路档案 · D${detail.day.day}`} title={detail.day.title} subtitle={`${detail.day.start} → ${detail.day.end} · ${detail.roads}`} icon={`D${detail.day.day}`} className="route" />
+    <DetailHeader eyebrow={`线路档案 · D${detail.day.day}`} title={detail.day.title} subtitle={`${detail.day.start} → ${detail.day.end} · ${detail.roads}`} icon={`D${detail.day.day}`} className="route" tripBase={tripBase} />
     <div className="detail-content">
       <section className="hero-grid">
         <DetailMediaCarousel items={detail.gallery} title={`D${detail.day.day} ${detail.day.title}`} />
@@ -166,6 +157,6 @@ export function RouteDetailPage({ detail }:{ detail:RouteDetail }) {
       next={nextRoute ? { href:`${tripBase}/route/${nextRoute.day}`, eyebrow:`D${nextRoute.day}`, title:nextRoute.title } : undefined}
     />
     <footer className="detail-footer"><a href={`${tripBase}/`}>← 回到地图继续规划</a><span>D{detail.day.day} · {detail.day.start} → {detail.day.end}</span></footer>
-    <DetailMobileNav day={detail.day.day} />
+    <DetailMobileNav day={detail.day.day} tripBase={tripBase} />
   </main>;
 }

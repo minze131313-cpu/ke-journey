@@ -24,7 +24,7 @@ test("renders the journey library homepage", async () => {
   assert.match(html, /KE JOURNEY/);
   assert.match(html, /旅程目录/);
   assert.match(html, /href="\/qinggan-loop\/"/);
-  assert.match(html, /og\.png/);
+  assert.match(html, /og\.jpg/);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape/i);
 });
 
@@ -52,7 +52,7 @@ test("renders canonical POI and route detail pages with record metadata", async 
   assert.match(poi, /下一段/);
   assert.match(poi, /href="\/qinggan-loop\/poi\/dunhuang"/);
   assert.match(poi, /href="\/qinggan-loop\/poi\/mingsha"/);
-  assert.doesNotMatch(poi, /og\.png/);
+  assert.doesNotMatch(poi, /og\.jpg/);
 
   const route = await htmlFor("/qinggan-loop/route/11");
   assert.match(route, /官方绕行 · 二尕公路/);
@@ -60,7 +60,7 @@ test("renders canonical POI and route detail pages with record metadata", async 
   assert.match(route, /D11 沿线实景/);
   assert.match(route, /href="\/qinggan-loop\/route\/10"/);
   assert.match(route, /href="\/qinggan-loop\/route\/12"/);
-  assert.doesNotMatch(route, /og\.png/);
+  assert.doesNotMatch(route, /og\.jpg/);
 });
 
 test("keeps every POI carousel image and previous/next link in the audited journey order", async () => {
@@ -96,4 +96,58 @@ test("keeps all twelve route pages in strict day order", async () => {
     if (day > 1) assert.match(html, new RegExp(`href="/qinggan-loop/route/${day-1}"`), `D${day} previous`);
     if (day < 12) assert.match(html, new RegExp(`href="/qinggan-loop/route/${day+1}"`), `D${day} next`);
   }
+});
+
+test("serves a real robots.txt with sitemap pointer", async () => {
+  const response = await render("/robots.txt");
+  assert.equal(response.status, 200, "robots.txt");
+  assert.match(response.headers.get("content-type") ?? "", /^text\/plain\b/i);
+  const body = await response.text();
+  assert.match(body, /User-Agent: \*/);
+  assert.match(body, /Allow: \//);
+  assert.match(body, /Sitemap: https:\/\/ke-journey\.bordy\.cn\/sitemap\.xml/);
+});
+
+test("serves a complete XML sitemap for every journey page", async () => {
+  const response = await render("/sitemap.xml");
+  assert.equal(response.status, 200, "sitemap.xml");
+  assert.match(response.headers.get("content-type") ?? "", /xml/i);
+  const xml = await response.text();
+  assert.match(xml, /https:\/\/ke-journey\.bordy\.cn\/qinggan-loop\/poi\/mogao/);
+  assert.match(xml, /https:\/\/ke-journey\.bordy\.cn\/qinggan-loop\/route\/12/);
+  assert.equal((xml.match(/<loc>/g) ?? []).length, 39, "39 pages: home + loop + 12 routes + 25 places");
+});
+
+test("returns a branded Chinese 404 for unknown paths", async () => {
+  const response = await render("/this-path-does-not-exist");
+  assert.equal(response.status, 404, "unknown path");
+  const html = await response.text();
+  assert.match(html, /这条路不在路书里/);
+  assert.match(html, /href="\/qinggan-loop\/?"/);
+  assert.doesNotMatch(html, /404: This page could not be found/);
+});
+
+test("serves WebP srcset variants with JPG fallbacks", async () => {
+  const poi = await htmlFor("/qinggan-loop/poi/mogao");
+  assert.match(poi, /type="image\/webp"/);
+  assert.match(poi, /\/detail\/opt\/mogao\.\d+\.webp \d+w/);
+  assert.match(poi, /<img src="\/detail\/mogao\.jpg"/);
+  const home = await htmlFor("/");
+  assert.match(home, /\/detail\/opt\/qinghai\.\d+\.webp \d+w/);
+});
+
+test("permanently redirects legacy unprefixed route and poi URLs", async () => {
+  const route = await render("/route/11");
+  assert.equal(route.status, 308, "/route/11");
+  assert.match(route.headers.get("location") ?? "", /\/qinggan-loop\/route\/11$/);
+  const poi = await render("/poi/mogao");
+  assert.equal(poi.status, 308, "/poi/mogao");
+  assert.match(poi.headers.get("location") ?? "", /\/qinggan-loop\/poi\/mogao$/);
+});
+
+test("returns 404 for unknown journey slugs", async () => {
+  const response = await render("/nonexistent-journey");
+  assert.equal(response.status, 404, "unknown journey slug");
+  const nested = await render("/nonexistent-journey/poi/xining");
+  assert.equal(nested.status, 404, "unknown journey nested");
 });

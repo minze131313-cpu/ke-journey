@@ -1,7 +1,8 @@
 "use client";
 
 import { useRef, useState } from "react";
-import type { MediaAsset } from "../detail-data";
+import type { MediaAsset } from "../journeys/types";
+import MediaImage from "./media-image";
 
 export default function DetailMediaCarousel({ items, title }:{ items:MediaAsset[]; title:string }) {
   const track = useRef<HTMLDivElement>(null);
@@ -25,7 +26,7 @@ export default function DetailMediaCarousel({ items, title }:{ items:MediaAsset[
   }}>
     <div className="media-track" ref={track} onScroll={syncIndex}>
       {items.map((item,index)=><figure className={`media-slide framing-${item.framing ?? "full"}`} key={`${item.src}-${index}`}>
-        <img src={item.src} alt={item.alt} loading={index ? "lazy" : "eager"} />
+        <MediaImage src={item.src} alt={item.alt} loading={index ? "lazy" : "eager"} sizes="(min-width: 980px) 62vw, 100vw" />
         <span className="media-scope">{item.contextLabel ?? "已核验影像"}</span>
         {items.length > 1 && active === index && <div className="media-edge-controls">
           <button type="button" onClick={()=>goTo(active-1)} aria-label="上一张图片"><span aria-hidden="true">‹</span></button>
