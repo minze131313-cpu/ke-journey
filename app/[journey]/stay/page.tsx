@@ -12,7 +12,7 @@ export async function generateMetadata({ params }:{ params:Promise<{journey:stri
   const journey = getJourney(slug);
   if (!journey) return { title: "旅程不存在｜KE Journey" };
   return {
-    title: `住宿查询｜${journey.title}｜KE Journey`,
+    title: `住宿查询｜${journey.title}`,
     description: "沿环线各停留点的实时酒店与民宿查询：实时房价、房态、设施与预订入口。",
   };
 }

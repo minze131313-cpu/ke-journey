@@ -12,7 +12,7 @@ export async function generateMetadata({ params }:{ params:Promise<{journey:stri
   const journey = getJourney(slug);
   if (!journey) return { title: "旅程不存在｜KE Journey" };
   return {
-    title: `${journey.title}｜${journey.trip.tripStats.days}日自驾地图｜KE Journey`,
+    title: `${journey.title}｜${journey.trip.tripStats.days}日自驾地图`,
     description: `${journey.title}完整自驾路书、景点、住宿、补给和道路风险地图。`,
   };
 }

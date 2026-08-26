@@ -198,7 +198,10 @@ test("renders the flight and stay service pages", async () => {
   const flights = await htmlFor("/qinggan-loop/flights");
   assert.match(flights, /航班查询/);
   assert.match(flights, /返回环线地图/);
+  assert.doesNotMatch(flights, /KE Journey｜KE Journey/);
   const stay = await htmlFor("/qinggan-loop/stay");
   assert.match(stay, /选择停留点/);
   assert.match(stay, /查住宿/);
+  const loop = await htmlFor("/qinggan-loop");
+  assert.doesNotMatch(loop, /KE Journey｜KE Journey/);
 });

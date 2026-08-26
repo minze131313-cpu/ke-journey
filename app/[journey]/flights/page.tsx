@@ -13,7 +13,7 @@ export async function generateMetadata({ params }:{ params:Promise<{journey:stri
   if (!journey) return { title: "旅程不存在｜KE Journey" };
   const terminal = journey.trip.places.find((place) => place.id === journey.config.terminalPlaceId)?.name ?? journey.config.title;
   return {
-    title: `航班查询｜${journey.title}｜KE Journey`,
+    title: `航班查询｜${journey.title}`,
     description: `${terminal}起终点的实时航班查询：选择出发城市与日期，查看去程/回程航班与参考价格。`,
   };
 }
