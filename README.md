@@ -82,6 +82,24 @@ scripts/optimize-images.mjs        WebP 生成脚本
 5. 图片必须逐张核对地点、版权与署名；资料优先引用政府、景区、国际地理及知名旅行媒体。新图片放入 `public/detail/` 后运行 `npm run optimize:images`。
 6. 道路管制、预约、票务和高原健康信息需要在出发前再次核验。
 
+## 微信小程序版
+
+`miniprogram/` 是原生 WXML/WXSS 实现的微信小程序（个人主体），与 Web 版共用 `app/journeys/**` 同一份旅程数据：
+
+```bash
+npm run export:mini     # 生成 marker 图标 + 导出小程序 JSON 与图片资源（唯一数据管道）
+npm run test:mini       # 导出 + 数据一致性校验（stops/坐标/图片存在性）
+npm run mp:open         # 开发者工具 CLI 打开项目（前置：设置→安全设置开启服务端口）
+npm run mp:preview      # 终端预览二维码；npm run mp:upload -- -v 0.1.0 -d "描述" 上传开发版本
+```
+
+- 数据经 `scripts/export-mini-data.mjs`（Vite SSR 构建 `scripts/mini-export.entry.ts`）生成到 `miniprogram/data/` 与 `miniprogram/journeys/<slug>/`；图片取 640/400px 档并用 sharp **转码为 JPG**（小程序对代码包内 WebP 支持不稳，webp 仅用于网络图片）；新增或修改旅程后重跑 `export:mini` 即可同步。
+- 分包：主包（首页/关于/公共资源）+ 每旅程一个分包，首页 `preloadRule` 预加载。
+- 信息架构（v0.2.0）：行程主页以「天」为索引的行程列表为核心（点击进入当天详情页），路线地图与路况、清单为页面中下部辅助区块；当天详情页含当日路线地图参考。
+- 差异说明：地图为微信原生 map（腾讯底图，GCJ-02 与数据一致）；Web 版实时驾车规划、卫星/路况图层小程序端不提供；来源链接改为复制到剪贴板。
+- 实拍打卡（云开发 + DeepSeek 视觉 API）：行程主页/POI 页「拍照」→ 定位匹配最近节点 → 云存储 → `cloudfunctions/analyze-photo` 云函数调用 `deepseek-v4-flash-vision-exp` 输出分类与一句话描述 → 节点实拍区展示。前置：开通云开发并在 `miniprogram/config.js` 填环境 ID、创建 `user_photos` 集合、部署云函数、配置 `DEEPSEEK_API_KEY` 环境变量、后台申请 getLocation 权限并更新隐私指引。
+- 发布：`mp:upload` 上传开发版本后，体验版设置、提审与发布需在 mp.weixin.qq.com 手动完成（个人主体无提审 API）；新小程序发布前需完成 ICP 备案。
+
 ## 图片与资料
 
 详情页的图片署名、原始链接和资料来源维护在 `app/journeys/<slug>/detail-data.ts` 中。仓库中的不同图片可能采用不同的开放许可或转载条件；再次分发或商用前，请逐项遵守对应来源的许可要求。`public/detail/opt/` 下的 WebP 文件由脚本从原图生成，原图仍保留供 OG 分享图与旧浏览器兜底。

@@ -1,0 +1,62 @@
+.hero {
+  padding-top: 48rpx;
+  padding-bottom: 40rpx;
+}
+
+.journey-card {
+  margin-bottom: 40rpx;
+  padding: 0;
+  overflow: hidden;
+}
+
+.card-img {
+  width: 100%;
+  height: 400rpx;
+  display: block;
+}
+
+.card-body {
+  padding: 36rpx 36rpx 40rpx;
+}
+
+.title-hover {
+  color: var(--teal);
+}
+
+.card-cta {
+  margin-top: 32rpx;
+}
+
+.fav-star {
+  font-size: 40rpx;
+  color: var(--muted-2);
+  padding: 0 8rpx;
+}
+
+.fav-on {
+  color: var(--gold);
+}
+
+.settings {
+  margin-top: 8rpx;
+  padding-top: 12rpx;
+  padding-bottom: 12rpx;
+}
+
+.set-row {
+  padding: 24rpx 0;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.set-row:last-child {
+  border-bottom: none;
+}
+
+.set-row-hover {
+  opacity: 0.7;
+}
+
+.set-btn {
+  padding: 8px 24px;
+  font-size: 14px;
+}

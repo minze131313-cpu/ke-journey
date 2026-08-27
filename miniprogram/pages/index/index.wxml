@@ -1,0 +1,41 @@
+<view class="page {{scaleClass}}">
+  <view class="hero container">
+    <text class="eyebrow">FIELD NOTES · ROAD TRIPS · MAPS</text>
+    <view class="t-hero" style="margin-top: 20rpx;">KEJourney</view>
+    <view class="t-lead" style="margin-top: 12rpx;">面向自驾旅行的交互式中文路书</view>
+  </view>
+
+  <view class="container">
+    <view class="card journey-card" wx:for="{{items}}" wx:key="slug">
+      <image class="card-img" src="{{item.image}}" mode="aspectFill" binderror="onImgError" data-name="card-{{item.slug}}" data-src="{{item.image}}" />
+      <view class="card-body">
+        <view class="row-between">
+          <text class="eyebrow">{{item.number}} · {{item.eyebrow}}</text>
+          <text class="fav-star {{item.favorite ? 'fav-on' : ''}}" bindtap="toggleFavorite" data-slug="{{item.slug}}" data-index="{{index}}">{{item.favorite ? "★" : "☆"}}</text>
+        </view>
+        <view class="t-title" bindtap="openJourney" data-slug="{{item.slug}}" hover-class="title-hover">{{item.title}}</view>
+        <view class="t-meta" style="margin-top: 8rpx;">{{item.subtitle}}</view>
+        <view class="t-body" style="margin-top: 16rpx;">{{item.description}}</view>
+        <view class="row-wrap" style="margin-top: 20rpx;">
+          <text class="mini-chip" wx:for="{{item.stats}}" wx:key="*this">{{item}}</text>
+        </view>
+        <view class="btn btn-primary card-cta" hover-class="btn-hover" bindtap="openJourney" data-slug="{{item.slug}}">打开路书 →</view>
+      </view>
+    </view>
+
+    <view class="card settings">
+      <view class="row-between set-row">
+        <text class="t-body">大字模式</text>
+        <view class="btn btn-ghost set-btn" hover-class="btn-hover" bindtap="cycleTextScale">{{scaleLabel}}</view>
+      </view>
+      <view class="row-between set-row" bindtap="openAbout" hover-class="set-row-hover">
+        <text class="t-body">关于与免责声明</text>
+        <text class="t-meta">›</text>
+      </view>
+    </view>
+
+    <view class="t-small" style="padding: 24rpx 8rpx 64rpx; text-align: center;">
+      内容与 Web 版同步生成 · 路况与票务信息出发前请再次核验
+    </view>
+  </view>
+</view>

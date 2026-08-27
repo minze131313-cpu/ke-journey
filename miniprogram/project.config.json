@@ -1,0 +1,15 @@
+{
+  "compileType": "miniprogram",
+  "appid": "wx2ad3aec6b9e3aa97",
+  "projectname": "KEJourney",
+  "miniprogramRoot": "./",
+  "cloudfunctionRoot": "cloudfunctions/",
+  "setting": {
+    "es6": true,
+    "postcss": true,
+    "minified": true,
+    "urlCheck": true,
+    "coverView": true
+  },
+  "libVersion": "latest"
+}

@@ -37,3 +37,14 @@ next-env.d.ts
 /.wrangler/
 /outputs/
 /work/
+
+# 微信开发者工具个人配置（本地编译设置，不入库）
+miniprogram/project.private.config.json
+miniprogram/private.config.json
+
+# 预览二维码等临时产物
+/.preview/
+/.mini-build/
+
+# 云开发部署配置（含密钥，勿提交）
+cloudbaserc.json

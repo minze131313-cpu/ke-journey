@@ -1,0 +1,163 @@
+.trip-home {
+  min-height: 100vh;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.trip-header {
+  padding-top: 24rpx;
+  padding-bottom: 12rpx;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  margin-left: 24rpx;
+  flex-shrink: 0;
+}
+
+.fav-star {
+  font-size: 40rpx;
+  color: var(--muted-2);
+  margin-right: 16rpx;
+  padding: 0 4rpx;
+}
+
+.fav-on {
+  color: var(--gold);
+}
+
+.share-btn {
+  margin: 0;
+  background: var(--teal);
+  color: var(--accent-on);
+  font-size: 13px;
+  line-height: 2.2;
+  border-radius: var(--radius-pill);
+  padding: 0 20px;
+}
+
+button.share-btn::after {
+  border: none;
+}
+
+.anchor-nav {
+  display: flex;
+  padding-top: 8rpx;
+  padding-bottom: 16rpx;
+  border-bottom: 1px solid var(--border-soft);
+  margin-bottom: 24rpx;
+  /* 吸顶：页面内容上滑时导航始终露出 */
+  position: sticky;
+  position: -webkit-sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--paper);
+}
+
+.section-title {
+  font-family: Georgia, "Songti SC", "Noto Serif SC", serif;
+  font-size: 26px;
+  line-height: 1.2;
+  margin-bottom: 12rpx;
+}
+
+.day-card {
+  margin-bottom: 24rpx;
+}
+
+.day-card-hover {
+  opacity: 0.8;
+}
+
+.stop-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 8rpx 20rpx;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-soft);
+  background: var(--surface-warm);
+  margin: 0 12rpx 12rpx 0;
+}
+
+.filter-row {
+  display: flex;
+  padding-bottom: 16rpx;
+  overflow: hidden;
+}
+
+.map-wrap {
+  height: 42vh;
+}
+
+.trip-map {
+  width: 100%;
+  height: 100%;
+}
+
+.day-strip {
+  border-top: 1px solid var(--border-soft);
+  background: var(--surface-warm);
+  white-space: nowrap;
+}
+
+.day-strip-inner {
+  display: inline-flex;
+  padding: 16rpx 24rpx;
+}
+
+.day-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 84rpx;
+  padding: 10rpx 20rpx;
+  margin-right: 12rpx;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.day-chip-active {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+
+.place-card {
+  margin-bottom: 8rpx;
+}
+
+.road-focus-btn {
+  padding: 8px 20px;
+  font-size: 14px;
+}
+
+.legend {
+  margin-bottom: 24rpx;
+}
+
+.cam-btn {
+  padding: 8px 22px;
+  font-size: 14px;
+  margin-right: 16rpx;
+}
+
+.photo-card {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 24rpx;
+  padding: 24rpx;
+}
+
+.photo-thumb {
+  width: 180rpx;
+  height: 180rpx;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+
+.photo-body {
+  margin-left: 24rpx;
+}

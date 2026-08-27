@@ -1,0 +1,101 @@
+<import src="/templates/detail.wxml" />
+
+<view class="page {{scaleClass}}">
+  <block wx:if="{{detail}}">
+    <image class="hero-img" src="{{detail.hero.src}}" mode="aspectFill" binderror="onImgError" data-name="hero" data-src="{{detail.hero.src}}" />
+    <view class="container">
+      <view class="head-block">
+        <text class="eyebrow">{{detail.kindLabel}} · {{detail.icon}} · D{{detail.place.day}}</text>
+        <view class="t-title" style="margin-top: 12rpx;">{{detail.place.name}}</view>
+        <view class="t-meta" style="margin-top: 8rpx;">{{detail.place.region}} · {{detail.place.subtitle}}</view>
+      </view>
+
+      <view class="row" style="margin-top: 24rpx;">
+        <view class="btn btn-primary flex-1" hover-class="btn-hover" bindtap="openNavigate">导航到这里</view>
+        <view class="btn btn-ghost flex-1" style="margin-left: 20rpx;" hover-class="btn-hover" bindtap="onTakePhoto">拍照打卡</view>
+      </view>
+
+      <view class="t-lead" style="margin-top: 24rpx;">{{detail.lead}}</view>
+
+      <view class="stat-grid">
+        <view class="stat" wx:for="{{stats}}" wx:key="label">
+          <view class="stat-inner">
+            <view class="stat-value">{{item.value}}</view>
+            <view class="stat-label">{{item.label}}</view>
+          </view>
+        </view>
+      </view>
+
+      <template is="sections" data="{{sections: sections}}" />
+
+      <view class="section-block">
+        <view class="section-title font-display">怎么安排</view>
+        <view class="dot-item" wx:for="{{highlights}}" wx:key="*this">
+          <view class="dot dot-gold" />
+          <text class="t-body">{{item}}</text>
+        </view>
+        <view class="dot-item" wx:for="{{actions}}" wx:key="*this" style="margin-top: 12rpx;">
+          <view class="dot dot-teal" />
+          <text class="t-body">{{item}}</text>
+        </view>
+      </view>
+
+      <template is="cautions" data="{{cautions: cautions}}" />
+
+      <view class="section-block">
+        <view class="section-title font-display">实地图集</view>
+      </view>
+      <template is="gallery" data="{{galleryItems: galleryItems, galleryIndex: galleryIndex}}" />
+
+      <view class="section-block">
+        <view class="section-title font-display">我的实拍</view>
+        <view class="t-small" style="margin-bottom: 12rpx;">拍照打卡的照片按位置归档到这里 · 长按可删除</view>
+        <view class="t-body" wx:if="{{userPhotos.length === 0}}">还没有这里的实拍。点上方「拍照打卡」，照片会自动归档并生成一句话笔记。</view>
+        <view
+          class="card photo-card"
+          wx:for="{{userPhotos}}"
+          wx:key="_id"
+          bindlongpress="deletePhoto"
+          data-id="{{item._id}}"
+          data-fileid="{{item.fileID}}"
+        >
+          <image class="photo-thumb" src="{{item.fileID}}" mode="aspectFill" binderror="onImgError" data-name="photo-{{index}}" data-src="{{item.fileID}}" />
+          <view class="photo-body flex-1">
+            <view class="row-wrap">
+              <text class="mini-chip">{{item.categoryLabel}}</text>
+              <text class="mini-chip" wx:if="{{item.distanceKm !== null}}">约 {{item.distanceKm}} km</text>
+            </view>
+            <view class="t-body strong">{{item.caption}}</view>
+            <view class="t-meta">{{item.timeText}}</view>
+          </view>
+        </view>
+      </view>
+
+      <template is="sources" data="{{sources: sources}}" />
+
+      <view class="pager">
+        <view
+          wx:if="{{prev}}"
+          class="btn btn-ghost pager-btn"
+          hover-class="btn-hover"
+          bindtap="goNeighbor"
+          data-id="{{prev}}"
+        >← 上一站</view>
+        <view wx:else class="btn btn-ghost pager-btn dim">起点</view>
+        <view class="pager-gap" />
+        <view
+          wx:if="{{next}}"
+          class="btn btn-primary pager-btn"
+          hover-class="btn-hover"
+          bindtap="goNeighbor"
+          data-id="{{next}}"
+        >下一站 →</view>
+        <view wx:else class="btn btn-primary pager-btn dim">终点</view>
+      </view>
+      <view style="height: 64rpx;" />
+    </view>
+  </block>
+  <view wx:else class="container">
+    <view class="t-body" style="padding: 80rpx 0;">这个节点还没有档案。</view>
+  </view>
+</view>

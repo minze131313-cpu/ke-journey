@@ -1,0 +1,18 @@
+.head-block {
+  padding-top: 32rpx;
+}
+
+.dim {
+  opacity: 0.4;
+}
+
+.day-map-wrap {
+  width: 100%;
+  height: 480rpx;
+  margin-top: 16rpx;
+}
+
+.day-map {
+  width: 100%;
+  height: 100%;
+}

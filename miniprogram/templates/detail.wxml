@@ -1,0 +1,49 @@
+<!-- 详情页共享模板：图集轮播 / 正文区块 / 警示 / 资料来源。
+     使用页需提供 galleryItems/galleryIndex、sections、cautions、sources，
+     并实现 onGalleryChange 与 copySource。 -->
+
+<template name="gallery">
+  <swiper class="swiper" indicator-dots="{{galleryItems.length > 1}}" bindchange="onGalleryChange">
+    <swiper-item wx:for="{{galleryItems}}" wx:key="src">
+      <image class="swiper-image" src="{{item.src}}" mode="aspectFill" binderror="onImgError" data-name="gallery-{{index}}" data-src="{{item.src}}" />
+    </swiper-item>
+  </swiper>
+  <view class="media-caption" wx:if="{{galleryItems.length > 0}}">
+    <view class="row-baseline">
+      <text class="t-small">{{galleryItems[galleryIndex].caption}}</text>
+      <text class="t-small media-counter">{{galleryIndex + 1}}/{{galleryItems.length}}</text>
+    </view>
+    <view class="t-small" style="margin-top: 4rpx;">{{galleryItems[galleryIndex].contextLabel}} · 图源 {{galleryItems[galleryIndex].credit}}</view>
+  </view>
+</template>
+
+<template name="sections">
+  <view class="section-block" wx:for="{{sections}}" wx:key="title">
+    <view class="section-title font-display">{{item.title}}</view>
+    <view class="t-body">{{item.text}}</view>
+  </view>
+</template>
+
+<template name="cautions">
+  <view class="danger-card" wx:if="{{cautions.length > 0}}" style="margin-top: 48rpx;">
+    <text class="eyebrow">需要注意</text>
+    <view class="dot-item" wx:for="{{cautions}}" wx:key="*this">
+      <view class="dot dot-danger" />
+      <text class="t-body">{{item}}</text>
+    </view>
+  </view>
+</template>
+
+<template name="sources">
+  <view class="section-block" wx:if="{{sources.length > 0}}">
+    <view class="section-title font-display">资料来源</view>
+    <view class="t-small" style="margin-bottom: 12rpx;">小程序内不直接打开网页；点击条目复制原文链接。</view>
+    <view class="source-item" wx:for="{{sources}}" wx:key="url" bindtap="copySource" data-url="{{item.url}}">
+      <view class="source-text">
+        <view class="t-body">{{item.name}}</view>
+        <view class="t-meta">{{item.meta}}</view>
+      </view>
+      <text class="source-copy">复制</text>
+    </view>
+  </view>
+</template>

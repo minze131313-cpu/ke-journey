@@ -1,0 +1,45 @@
+<view class="page {{scaleClass}}">
+  <view class="container">
+    <view class="hero">
+      <text class="eyebrow">ABOUT · FIELD NOTES</text>
+      <view class="t-title" style="margin-top: 16rpx;">关于 KEJourney</view>
+    </view>
+
+    <view class="card">
+      <view class="t-body">KEJourney 是面向自驾旅行的交互式中文路书：旅程目录、交互地图、逐日线路、节点档案（景点/住宿/补给/风险）与图文详情。本小程序与 Web 版共用同一套旅程数据（<text class="strong">青甘大环线</text>：12 天、约 3,000 公里、25 个地图节点）。</view>
+      <view class="t-body" style="margin-top: 20rpx;">地图使用微信小程序原生地图组件，底图为腾讯地图；Web 版的实时驾车规划、卫星与路况图层在小程序端未提供。</view>
+    </view>
+
+    <view class="card" style="margin-top: 32rpx;">
+      <view class="section-title font-display">图片与资料</view>
+      <view class="t-body">详情页图片均逐张核对地点、版权与署名，采用开放许可或获准转载，来源与署名随每条图注展示；再次分发或商用前请逐项遵守对应许可要求。文字资料优先引用政府、景区、国际地理机构与知名旅行媒体。</view>
+    </view>
+
+    <view class="danger-card" style="margin-top: 32rpx;">
+      <text class="eyebrow">免责声明</text>
+      <view class="t-body" style="margin-top: 8rpx;">路书中的路况、管制、预约、票务与高原健康信息在编写时经核验，但不替代交通主管部门、景区与现场人员的即时指引；出发前 48 小时及当天请以官方公告为准。</view>
+    </view>
+
+    <view class="card" style="margin-top: 32rpx;">
+      <view class="section-title font-display">隐私说明</view>
+      <view class="t-body">收藏、清单勾选与大字模式设置仅保存在你的设备本地。使用「拍照打卡」时：经你授权后获取位置信息（用于把照片匹配到最近的旅程节点）与相机权限；照片与分析结果上传至本小程序的云开发环境存储，仅你本人可见、可删除。</view>
+    </view>
+
+    <view class="card" style="margin-top: 32rpx;">
+      <view class="section-title font-display">设备诊断</view>
+      <block wx:if="{{diag}}">
+        <view class="t-body">平台：{{diag.platform}} · {{diag.system}}</view>
+        <view class="t-body">基础库：{{diag.sdk}}</view>
+        <view class="t-body">运行环境：{{diag.envVersion}}（trial=体验版）· 版本 {{diag.version}}</view>
+      </block>
+      <view class="t-body" wx:else>暂无（启动后生成）</view>
+      <block wx:if="{{imgErrors.length > 0}}">
+        <view class="section-title font-display" style="margin-top: 24rpx; color: var(--danger);">图片加载失败 {{imgErrors.length}} 处</view>
+        <view class="t-small" wx:for="{{imgErrors}}" wx:key="index">{{item.page}} · {{item.name}} · {{item.err}}</view>
+      </block>
+      <view class="t-body" wx:else style="margin-top: 16rpx;">图片加载：正常</view>
+    </view>
+
+    <view class="t-small" style="padding: 40rpx 0 64rpx; text-align: center;">KEJourney 小程序 v0.1.2 · 与 Web 版数据同步</view>
+  </view>
+</view>

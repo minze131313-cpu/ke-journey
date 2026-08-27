@@ -10,7 +10,17 @@
     "build": "vinext build",
     "start": "vinext start",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
-    "optimize:images": "node scripts/optimize-images.mjs"
+    "optimize:images": "node scripts/optimize-images.mjs",
+    "export:mini": "node scripts/gen-marker-icons.mjs && node scripts/export-mini-data.mjs",
+    "test:mini": "node scripts/export-mini-data.mjs && node --test tests/mini-data.test.mjs",
+    "e2e:mini": "node tests/mini-e2e.mjs",
+    "mp:open": "node scripts/devtools-cli.mjs open",
+    "mp:preview": "node scripts/devtools-cli.mjs preview --qr-format terminal",
+    "mp:upload": "node scripts/devtools-cli.mjs upload",
+    "mp:build-npm": "node scripts/devtools-cli.mjs build-npm",
+    "mp:islogin": "node scripts/devtools-cli.mjs islogin",
+    "mp:login": "node scripts/devtools-cli.mjs login",
+    "mp:close": "node scripts/devtools-cli.mjs close"
   },
   "dependencies": {
     "next": "16.2.6",
@@ -35,7 +45,8 @@
     "typescript": "5.9.3",
     "vinext": "1.0.0-beta.3",
     "vite": "8.0.13",
-    "wrangler": "4.92.0"
+    "wrangler": "4.92.0",
+    "ws": "^8.21.3"
   },
   "type": "module"
 }

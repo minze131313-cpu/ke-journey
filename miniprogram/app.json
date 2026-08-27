@@ -1,0 +1,32 @@
+{
+  "pages": ["pages/index/index", "pages/about/about"],
+  "subpackages": [
+    {
+      "root": "journeys/qinggan-loop",
+      "pages": ["trip/trip", "route/route", "poi/poi"]
+    }
+  ],
+  "preloadRule": {
+    "pages/index/index": {
+      "network": "all",
+      "packages": ["journeys/qinggan-loop"]
+    }
+  },
+  "permission": {
+    "scope.userLocation": {
+      "desc": "用于把实拍照片匹配到最近的旅程节点"
+    }
+  },
+  "requiredPrivateInfos": ["getLocation"],
+  "__usePrivacyCheck__": true,
+  "window": {
+    "navigationBarBackgroundColor": "#fff8ec",
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "KEJourney",
+    "backgroundColor": "#fff8ec",
+    "backgroundTextStyle": "dark"
+  },
+  "style": "v2",
+  "lazyCodeLoading": "requiredComponents",
+  "sitemapLocation": "sitemap.json"
+}
