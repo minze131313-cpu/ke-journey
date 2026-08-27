@@ -100,7 +100,11 @@ async function analyze(fileID, journeySlug, poiId, place, km, takenAt, lat, lng)
   return result;
 }
 
-// 完整拍照打卡流程。onDone(result, poiId) 用于归档后跳转/刷新。
+// 完整拍照打卡流程。成功后返回：
+// { fileID, category, categoryLabel, caption, poiId, placeName, region,
+//   distanceKm, nearestName, nearestKm, assigned }
+// assigned=false 表示超出匹配阈值（照片进入「未归档」，可在实拍足迹里手动归属）。
+// onDone(result) 在归档完成后触发（用于刷新列表）。
 async function run({ places, journeySlug, preferredPoiId = null, onDone = null }) {
   if (!cloudReady()) return null;
   if (!(await ensurePrivacy())) return null;
@@ -139,21 +143,20 @@ async function run({ places, journeySlug, preferredPoiId = null, onDone = null }
       loc ? loc.lng : null,
     );
     wx.hideLoading();
-    const locationText = loc
-      ? target
-        ? `最近节点：${target.name}（约 ${km.toFixed(1)} km）`
-        : "未匹配任何节点（已存未归类）"
-      : "未获取到位置（已存未归类）";
-    wx.showModal({
-      title: "已归档 ✓",
-      content: `${result.categoryLabel || "实拍"}\n${result.caption}\n${locationText}`,
-      confirmText: "查看",
-      cancelText: "继续",
-      success: (r) => {
-        if (r.confirm && onDone) onDone(result, poiId);
-      },
-    });
-    return result;
+    const assigned = poiId !== "__unmatched__";
+    const payload = {
+      ...result,
+      poiId,
+      placeName: assigned && target ? target.name : "未归档",
+      region: assigned && target ? target.region : "",
+      distanceKm: km,
+      nearestName: target ? target.name : null,
+      nearestKm: km,
+      assigned,
+      hasLocation: !!loc,
+    };
+    if (onDone) onDone(payload);
+    return payload;
   } catch (err) {
     wx.hideLoading();
     wx.showToast({ title: String((err && err.message) || err).slice(0, 40), icon: "none" });

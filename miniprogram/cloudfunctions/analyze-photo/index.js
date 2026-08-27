@@ -155,6 +155,24 @@ exports.main = async (event) => {
     return { ok: true, id: res._id, category, categoryLabel, caption, fileID };
   }
 
+  if (action === "assign") {
+    const { id, poiId, placeName, region, distanceKm } = event;
+    if (!id || !poiId) return { ok: false, error: "缺少 id 或 poiId" };
+    await ensureCollection();
+    const getRes = await db.collection(COLLECTION).where({ _id: id, openid: OPENID }).get();
+    if (!getRes.data || getRes.data.length === 0) {
+      return { ok: false, error: "记录不存在或无权操作" };
+    }
+    const patch = {
+      poiId,
+      placeName: placeName || "",
+      region: region || "",
+    };
+    if (typeof distanceKm === "number") patch.distanceKm = Math.round(distanceKm * 10) / 10;
+    await db.collection(COLLECTION).doc(id).update({ data: patch });
+    return { ok: true };
+  }
+
   if (action === "delete") {
     const { id, fileID } = event;
     if (!id) return { ok: false, error: "缺少 id" };

@@ -50,6 +50,10 @@ Page({
     scaleClass: "scale-1x",
     anchor: "",
     userPhotos: [],
+    photoResult: null,
+    nodePickerOpen: false,
+    assignNodes: [],
+    assigning: null,
   },
 
   onLoad(options) {
@@ -137,13 +141,81 @@ Page({
     photo.run({
       places: data.trip.places,
       journeySlug: this._slug,
-      onDone: (result, poiId) => {
+      onDone: (payload) => {
         this.loadUserPhotos();
-        if (poiId && poiId !== "__unmatched__") {
-          wx.navigateTo({ url: `/journeys/${data.slug}/poi/poi?id=${poiId}` });
-        }
+        this.setData({
+          photoResult: {
+            ...payload,
+            kmText: payload.distanceKm != null ? `约 ${payload.distanceKm.toFixed(1)} km` : "",
+          },
+        });
       },
     });
+  },
+
+  closeResult() {
+    this.setData({ photoResult: null });
+  },
+
+  noop() {},
+
+  openAssignedNode() {
+    const r = this.data.photoResult;
+    this.setData({ photoResult: null });
+    if (r && r.assigned) {
+      wx.navigateTo({ url: `/journeys/${data.slug}/poi/poi?id=${r.poiId}` });
+    }
+  },
+
+  // ============ 未归档照片手动归属 ============
+
+  openNodePicker(e) {
+    const id = e.currentTarget.dataset.id;
+    this.setData({
+      assigning: id,
+      nodePickerOpen: true,
+      assignNodes: data.trip.places.map((p) => ({
+        id: p.id,
+        name: p.name,
+        region: p.region,
+        day: `D${p.day}`,
+      })),
+    });
+  },
+
+  closeNodePicker() {
+    this.setData({ nodePickerOpen: false, assigning: null });
+  },
+
+  pickNode(e) {
+    const poiId = e.currentTarget.dataset.id;
+    const node = data.trip.places.find((p) => p.id === poiId);
+    if (!node || !this.data.assigning) return;
+    const id = this.data.assigning;
+    wx.showLoading({ title: "归档中…", mask: true });
+    wx.cloud
+      .callFunction({
+        name: "analyze-photo",
+        data: {
+          action: "assign",
+          id,
+          poiId,
+          placeName: node.name,
+          region: node.region,
+        },
+      })
+      .then((res) => {
+        wx.hideLoading();
+        const result = res.result || {};
+        if (!result.ok) throw new Error(result.error || "归属失败");
+        this.setData({ nodePickerOpen: false, assigning: null });
+        this.loadUserPhotos();
+        wx.showToast({ title: `已归档到「${node.name}」`, icon: "none" });
+      })
+      .catch((err) => {
+        wx.hideLoading();
+        wx.showToast({ title: String((err && err.message) || "归属失败").slice(0, 40), icon: "none" });
+      });
   },
 
   onPhotoTap(e) {

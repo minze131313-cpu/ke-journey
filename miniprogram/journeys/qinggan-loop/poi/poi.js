@@ -26,6 +26,7 @@ Page({
     scaleClass: "scale-1x",
     imgErrors: [],
     userPhotos: [],
+    photoResult: null,
   },
 
   onLoad(options) {
@@ -104,9 +105,23 @@ Page({
       places: data.trip.places,
       journeySlug: data.slug,
       preferredPoiId: this._id,
-      onDone: () => this.loadUserPhotos(),
+      onDone: (payload) => {
+        this.loadUserPhotos();
+        this.setData({
+          photoResult: {
+            ...payload,
+            kmText: payload.distanceKm != null ? `约 ${payload.distanceKm.toFixed(1)} km` : "",
+          },
+        });
+      },
     });
   },
+
+  closeResult() {
+    this.setData({ photoResult: null });
+  },
+
+  noop() {},
 
   deletePhoto(e) {
     const { id, fileid } = e.currentTarget.dataset;

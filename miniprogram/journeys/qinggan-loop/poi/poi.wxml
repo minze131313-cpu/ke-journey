@@ -98,4 +98,20 @@
   <view wx:else class="container">
     <view class="t-body" style="padding: 80rpx 0;">这个节点还没有档案。</view>
   </view>
+
+  <!-- 拍照归档结果卡片 -->
+  <view class="mask" wx:if="{{photoResult}}" bindtap="closeResult">
+    <view class="sheet-card" catchtap="noop">
+      <image class="sheet-img" src="{{photoResult.fileID}}" mode="aspectFill" />
+      <view class="sheet-body">
+        <view class="row-wrap">
+          <text class="mini-chip">{{photoResult.categoryLabel}}</text>
+          <text class="mini-chip">{{photoResult.kmText}}</text>
+        </view>
+        <view class="t-body strong" style="margin-top: 12rpx;">{{photoResult.caption}}</view>
+        <view class="t-meta" style="margin-top: 8rpx;">已归档到「{{detail.place.name}}」 · 可在下方「我的实拍」查看</view>
+        <view class="btn btn-primary result-ok" hover-class="btn-hover" bindtap="closeResult">好的</view>
+      </view>
+    </view>
+  </view>
 </view>

@@ -187,7 +187,7 @@
     <!-- 实拍足迹 -->
     <view id="sec-photos" class="container">
       <view class="section-title font-display" style="margin-top: 48rpx;">实拍足迹</view>
-      <view class="t-lead" style="margin-bottom: 8rpx;">点「拍照」自动匹配节点并生成一句话笔记 · 长按可删除</view>
+      <view class="t-lead" style="margin-bottom: 8rpx;">点「拍照」自动匹配节点并生成一句话笔记 · 长按删除 · 未归档照片可手动归属</view>
       <view class="card" wx:if="{{userPhotos.length === 0}}">
         <view class="t-body">还没有实拍。点击右上角「拍照」，照片会按拍摄位置自动归档到对应节点。</view>
       </view>
@@ -206,12 +206,72 @@
           <view class="row-wrap">
             <text class="mini-chip">{{item.categoryLabel}}</text>
             <text class="mini-chip" wx:if="{{item.distanceKm !== null}}">约 {{item.distanceKm}} km</text>
+            <text class="mini-chip mini-chip-warn" wx:if="{{item.poiId === '__unmatched__'}}">未归档</text>
           </view>
           <view class="t-body strong">{{item.caption}}</view>
           <view class="t-meta">{{item.placeName}} · {{item.timeText}}</view>
+          <view
+            class="btn btn-ghost assign-btn"
+            wx:if="{{item.poiId === '__unmatched__'}}"
+            catchtap="openNodePicker"
+            data-id="{{item._id}}"
+            hover-class="btn-hover"
+          >归属到节点</view>
         </view>
       </view>
     </view>
 
     <view class="t-small" style="padding: 8rpx 0 64rpx; text-align: center;">内容与 Web 版同步 · 路况与票务出发前请再次核验</view>
+
+  <!-- 拍照归档结果卡片 -->
+  <view class="mask" wx:if="{{photoResult}}" bindtap="closeResult">
+    <view class="sheet-card" catchtap="noop">
+      <image class="sheet-img" src="{{photoResult.fileID}}" mode="aspectFill" />
+      <view class="sheet-body">
+        <view class="row-wrap">
+          <text class="mini-chip">{{photoResult.categoryLabel}}</text>
+          <text class="mini-chip" wx:if="{{photoResult.assigned}}">{{photoResult.kmText}}</text>
+          <text class="mini-chip mini-chip-warn" wx:else>未归档</text>
+        </view>
+        <view class="t-body strong" style="margin-top: 12rpx;">{{photoResult.caption}}</view>
+        <view class="t-meta" style="margin-top: 8rpx;" wx:if="{{photoResult.assigned}}">
+          已归档到「{{photoResult.placeName}}」{{photoResult.region ? ' · ' + photoResult.region : ''}}
+        </view>
+        <view class="t-meta" style="margin-top: 8rpx;" wx:else>
+          {{photoResult.hasLocation ? '距最近节点「' + photoResult.nearestName + '」' + photoResult.kmText + '，超出自动匹配范围' : '未获取到定位'}}，已存入实拍足迹 · 可手动归属到节点
+        </view>
+        <view class="row" style="margin-top: 28rpx;">
+          <view class="btn btn-primary flex-1" hover-class="btn-hover" bindtap="openAssignedNode" wx:if="{{photoResult.assigned}}">查看节点</view>
+          <view class="btn btn-ghost flex-1" hover-class="btn-hover" bindtap="closeResult" wx:if="{{photoResult.assigned}}" style="margin-left: 20rpx;">完成</view>
+          <view class="btn btn-primary flex-1" hover-class="btn-hover" bindtap="closeResult" wx:else>好的</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 手动归属节点选择器 -->
+  <view class="mask" wx:if="{{nodePickerOpen}}" bindtap="closeNodePicker">
+    <view class="sheet-card node-picker" catchtap="noop">
+      <view class="row-between" style="padding: 8rpx 0 16rpx;">
+        <view class="t-title-sm font-display">归属到节点</view>
+        <text class="t-meta" bindtap="closeNodePicker">关闭</text>
+      </view>
+      <scroll-view scroll-y class="node-list">
+        <view
+          class="node-item"
+          wx:for="{{assignNodes}}"
+          wx:key="id"
+          bindtap="pickNode"
+          data-id="{{item.id}}"
+          hover-class="node-item-hover"
+        >
+          <view class="flex-1">
+            <view class="t-body strong">{{item.name}}</view>
+            <view class="t-meta">{{item.day}} · {{item.region}}</view>
+          </view>
+          <text class="t-meta">›</text>
+        </view>
+      </scroll-view>
+    </view>
+  </view>
 </view>
