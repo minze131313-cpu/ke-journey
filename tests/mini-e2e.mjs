@@ -356,7 +356,21 @@ try {
   );
   console.log(`✓ 路线详情：D11 ${routeData.detail.day.title}（${routeData.rhythm.length} 节点节奏，图集加载正常）`);
 
-  // 9. 关于页
+  // 9. 画廊频道（未配置云数据时为优雅空态）
+  await retry(
+    () => wxCall("navigateTo", [{ url: "/journeys/qinggan-loop/gallery/gallery" }]),
+    5,
+    3000,
+    "navigateTo 画廊",
+  );
+  await sleep(2500);
+  cur = await retry(() => current(), 8, 2000, "getCurrentPage 画廊");
+  assert.equal(cur.path, "journeys/qinggan-loop/gallery/gallery");
+  const galleryData = await pageData(6, "journeys/qinggan-loop/gallery/gallery");
+  assert.ok(Array.isArray(galleryData.sections), "画廊时间线数据缺失");
+  console.log(`✓ 画廊频道：空态正常（${galleryData.sections.length} 个时间分组）`);
+
+  // 10. 关于页
   await retry(() => wxCall("navigateTo", [{ url: "/pages/about/about" }]), 5, 3000, "navigateTo 关于页");
   await sleep(2500);
   cur = await retry(() => current(), 8, 2000, "getCurrentPage 关于页");

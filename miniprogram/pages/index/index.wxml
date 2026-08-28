@@ -28,6 +28,10 @@
         <text class="t-body">大字模式</text>
         <view class="btn btn-ghost set-btn" hover-class="btn-hover" bindtap="cycleTextScale">{{scaleLabel}}</view>
       </view>
+      <view class="row-between set-row" bindtap="openGallery" hover-class="set-row-hover">
+        <text class="t-body">旅行画廊</text>
+        <text class="t-meta">›</text>
+      </view>
       <view class="row-between set-row" bindtap="openAbout" hover-class="set-row-hover">
         <text class="t-body">关于与免责声明</text>
         <text class="t-meta">›</text>

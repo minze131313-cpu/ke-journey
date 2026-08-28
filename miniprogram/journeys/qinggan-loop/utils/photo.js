@@ -79,7 +79,22 @@ function getLocation() {
   });
 }
 
-async function analyze(fileID, journeySlug, poiId, place, km, takenAt, lat, lng) {
+function slimPlaces(places) {
+  return (places || []).map((p) => ({
+    id: p.id,
+    name: p.name,
+    coords: p.coords,
+    day: p.day,
+    category: p.category,
+    region: p.region,
+  }));
+}
+
+function slimRoutes(routes) {
+  return (routes || []).map((r) => r);
+}
+
+async function analyze(fileID, journeySlug, poiId, place, km, takenAt, lat, lng, places, routes) {
   const res = await wx.cloud.callFunction({
     name: "analyze-photo",
     data: {
@@ -93,6 +108,8 @@ async function analyze(fileID, journeySlug, poiId, place, km, takenAt, lat, lng)
       lat,
       lng,
       distanceKm: km,
+      places: slimPlaces(places),
+      routes: slimRoutes(routes),
     },
   });
   const result = res.result || {};
@@ -101,11 +118,12 @@ async function analyze(fileID, journeySlug, poiId, place, km, takenAt, lat, lng)
 }
 
 // 完整拍照打卡流程。成功后返回：
-// { fileID, category, categoryLabel, caption, poiId, placeName, region,
-//   distanceKm, nearestName, nearestKm, assigned }
+// { fileID, category, categoryLabel, photoType, weather, caption, monologue,
+//   phase, phaseLabel, tags, poiId, placeName, region, distanceKm,
+//   nearestName, nearestKm, assigned, hasLocation }
 // assigned=false 表示超出匹配阈值（照片进入「未归档」，可在实拍足迹里手动归属）。
 // onDone(result) 在归档完成后触发（用于刷新列表）。
-async function run({ places, journeySlug, preferredPoiId = null, onDone = null }) {
+async function run({ places, routes, journeySlug, preferredPoiId = null, onDone = null }) {
   if (!cloudReady()) return null;
   if (!(await ensurePrivacy())) return null;
   const filePath = await choosePhoto();
@@ -141,6 +159,8 @@ async function run({ places, journeySlug, preferredPoiId = null, onDone = null }
       takenAt,
       loc ? loc.lat : null,
       loc ? loc.lng : null,
+      places,
+      routes,
     );
     wx.hideLoading();
     const assigned = poiId !== "__unmatched__";
@@ -164,4 +184,4 @@ async function run({ places, journeySlug, preferredPoiId = null, onDone = null }
   }
 }
 
-module.exports = { run, nearestPlace, haversineKm, THRESHOLD_KM };
+module.exports = { run, nearestPlace, haversineKm, slimPlaces, slimRoutes, THRESHOLD_KM };

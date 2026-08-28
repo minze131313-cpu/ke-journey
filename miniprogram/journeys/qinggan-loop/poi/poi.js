@@ -103,6 +103,7 @@ Page({
   onTakePhoto() {
     photo.run({
       places: data.trip.places,
+      routes: data.trip.days.map((d) => d.route),
       journeySlug: data.slug,
       preferredPoiId: this._id,
       onDone: (payload) => {

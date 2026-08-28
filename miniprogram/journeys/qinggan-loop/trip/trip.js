@@ -140,6 +140,7 @@ Page({
   onTakePhoto() {
     photo.run({
       places: data.trip.places,
+      routes: data.trip.days.map((d) => d.route),
       journeySlug: this._slug,
       onDone: (payload) => {
         this.loadUserPhotos();
@@ -354,6 +355,10 @@ Page({
     const anchor = e.currentTarget.dataset.anchor;
     this.setData({ anchor });
     this.scrollToAnchor(anchor);
+  },
+
+  openGallery() {
+    wx.navigateTo({ url: `/journeys/${data.slug}/gallery/gallery` });
   },
 
   onMarkerTap(e) {

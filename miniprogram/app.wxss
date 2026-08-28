@@ -290,6 +290,14 @@ page {
   color: var(--danger);
 }
 
+/* 独白：多行截断（画廊卡片与归档结果卡共用） */
+.monologue {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+}
+
 .assign-btn {
   margin-top: 16rpx;
   padding: 8px 24px;

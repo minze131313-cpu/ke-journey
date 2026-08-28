@@ -64,6 +64,10 @@ Page({
     wx.navigateTo({ url: "/pages/about/about" });
   },
 
+  openGallery() {
+    wx.navigateTo({ url: "/journeys/qinggan-loop/gallery/gallery" });
+  },
+
   onShareAppMessage() {
     return { title: "KEJourney · 自驾旅行路书", path: "/pages/index/index" };
   },

@@ -25,6 +25,7 @@
     <view class="chip {{anchor === 'sec-map' ? 'chip-active' : ''}}" hover-class="btn-hover" bindtap="jumpTo" data-anchor="sec-map">地图</view>
     <view class="chip {{anchor === 'sec-roads' ? 'chip-active' : ''}}" hover-class="btn-hover" bindtap="jumpTo" data-anchor="sec-roads">路况</view>
     <view class="chip {{anchor === 'sec-checklist' ? 'chip-active' : ''}}" hover-class="btn-hover" bindtap="jumpTo" data-anchor="sec-checklist">清单</view>
+    <view class="chip chip-nav" hover-class="btn-hover" bindtap="openGallery">画廊</view>
   </view>
 
     <!-- 行程列表（核心） -->
@@ -234,6 +235,7 @@
           <text class="mini-chip mini-chip-warn" wx:else>未归档</text>
         </view>
         <view class="t-body strong" style="margin-top: 12rpx;">{{photoResult.caption}}</view>
+        <view class="t-body monologue" wx:if="{{photoResult.monologue}}" style="margin-top: 8rpx;">{{photoResult.monologue}}</view>
         <view class="t-meta" style="margin-top: 8rpx;" wx:if="{{photoResult.assigned}}">
           已归档到「{{photoResult.placeName}}」{{photoResult.region ? ' · ' + photoResult.region : ''}}
         </view>

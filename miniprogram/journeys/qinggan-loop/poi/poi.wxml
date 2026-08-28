@@ -109,6 +109,7 @@
           <text class="mini-chip">{{photoResult.kmText}}</text>
         </view>
         <view class="t-body strong" style="margin-top: 12rpx;">{{photoResult.caption}}</view>
+        <view class="t-body monologue" wx:if="{{photoResult.monologue}}" style="margin-top: 8rpx;">{{photoResult.monologue}}</view>
         <view class="t-meta" style="margin-top: 8rpx;">已归档到「{{detail.place.name}}」 · 可在下方「我的实拍」查看</view>
         <view class="btn btn-primary result-ok" hover-class="btn-hover" bindtap="closeResult">好的</view>
       </view>

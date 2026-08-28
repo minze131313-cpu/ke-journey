@@ -3,7 +3,7 @@
   "subpackages": [
     {
       "root": "journeys/qinggan-loop",
-      "pages": ["trip/trip", "route/route", "poi/poi"]
+      "pages": ["trip/trip", "route/route", "poi/poi", "gallery/gallery"]
     }
   ],
   "preloadRule": {
