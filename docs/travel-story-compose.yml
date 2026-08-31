@@ -6,15 +6,18 @@
 #   {project_name: "ke-journey-travel-story", content: <本文件内容>}
 # 日志出现 TRAVEL_STORY_READY 即构建完成，服务监听 127.0.0.1:3001。
 #
-# 前置（hPanel / 已有容器内手动一次）：
+# 前置（hPanel / stager 容器内手动一次）：
 #   1. mkdir -p /opt/travel-story /opt/travel-story-src
 #   2. /opt/travel-story/.env.local（600 权限）：
-#        GAODE_KEY=...            # 高德「Web服务」key
+#        GAODE_KEY=...            # 高德「Web服务」key（地点搜索；可暂时留空）
 #        LOCATIONIQ_KEY=...       # 可选
 #        NEXT_PUBLIC_KEJOURNEY_URL=https://ke-journey.bordy.cn/
 #        NEXT_PUBLIC_BASE_PATH=/travel-story
-#   3. nginx 的 ke-journey.bordy.cn.conf 增加 location ^~ /travel-story/ 反代块
-#      （见 travel-story/KEJOURNEY.md），校验后重启 VPS。
+#   3. nginx 的 ke-journey.bordy.cn.conf 增加 location ^~ /travel-story 反代块
+#      （见 travel-story/KEJOURNEY.md），校验后 reload。
+#
+# 注意：/opt/ke-journey-src 是主站构建目录且每次发布会被清空重建，
+#       本应用的代码与 data/ 必须放在独立的 /opt/travel-story-src。
 # ============================================================
 
 services:
@@ -28,16 +31,24 @@ services:
     volumes:
       - /opt/travel-story:/app            # 密钥目录（.env.local，只读使用）
       - /opt/travel-story-src:/src        # 代码与 data/（行程、素材、录像持久化）
-    command: >
-      sh -c "apk add --no-cache git ffmpeg &&
+    command:
+      - sh
+      - -lc
+      - |-
+        set -eu
+        apk add --no-cache git ffmpeg
         if [ ! -d /src/repo/.git ]; then
+          rm -rf /src/repo;
           git clone --depth 1 --branch travel-story https://github.com/minze131313-cpu/ke-journey.git /src/repo;
         else
           (cd /src/repo && git fetch --depth 1 origin travel-story && git checkout -B travel-story origin/travel-story);
-        fi &&
-        cp /app/.env.local /src/repo/travel-story/.env.local &&
-        cd /src/repo/travel-story &&
-        npm ci --no-audit --no-fund &&
-        npm run build &&
-        echo TRAVEL_STORY_READY &&
-        exec npm start -- -H 127.0.0.1 -p 3001"
+        fi;
+        cp /app/.env.local /src/repo/travel-story/.env.local;
+        cd /src/repo/travel-story;
+        HEAD_NOW=$(git rev-parse HEAD);
+        if [ -d node_modules ] && [ -f .next/BUILD_ID ] && [ "$(cat /src/repo/.travel-story-built 2>/dev/null || true)" = "$HEAD_NOW" ]; then
+          echo SKIP_BUILD_UP_TO_DATE;
+        else
+          npm ci --no-audit --no-fund && npm run build && echo "$HEAD_NOW" > /src/repo/.travel-story-built && echo TRAVEL_STORY_READY;
+        fi;
+        exec npm start -- -H 127.0.0.1 -p 3001
