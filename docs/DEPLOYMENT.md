@@ -157,7 +157,8 @@ location /api/ {
       client_max_body_size 600m;   # 素材与录像上传
   }
   ```
-  修改后按本文档顶部流程 `nginx -t` 校验并重启 VPS。
+  修改后 `nginx -t` 校验并重启 VPS；2026-08-31 起实测可用
+  SSH（22 端口已恢复）直接 `systemctl reload nginx` 优雅热载，无需重启整机。
 - 互链：主站 `NEXT_PUBLIC_TRAVEL_STORY_URL=https://ke-journey.bordy.cn/travel-story/`
   （已为默认值），工具 `NEXT_PUBLIC_KEJOURNEY_URL=https://ke-journey.bordy.cn/`。
 - 上线验证：`curl https://ke-journey.bordy.cn/travel-story` 200；
