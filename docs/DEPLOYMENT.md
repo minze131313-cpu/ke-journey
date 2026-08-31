@@ -126,6 +126,45 @@ location /api/ {
 - 若上游代理地址/token 变更，同时更新：VPS nginx 配置、本地 `.env.local`、
   `app/lib/travel-api.ts` 注释与本文档。
 
+## Travel Story 独立部署（原域名 /travel-story/ 目录）
+
+`travel-story` 分支的 `travel-story/` 子目录是 Travel Story 旅行影片工具
+（Next.js 15 带服务端 API）。与静态主站不同，它需要 Node 常驻进程，但对外
+仍走**同一个二级域名下的独立目录**：`https://ke-journey.bordy.cn/travel-story/`。
+
+- 应用通过 `NEXT_PUBLIC_BASE_PATH=/travel-story` 同时驱动 next.config 的
+  `basePath` 与客户端 API 前缀（`travel-story/lib/base.ts`），构建与运行时
+  都必须带这个变量（写在 `/opt/travel-story/.env.local` 中）。
+- 进程：Hostinger API 方式 A 起 Docker 项目 `ke-journey-travel-story`
+  （compose 见仓库 `docs/travel-story-compose.yml`），`network_mode: host`、
+  监听 `127.0.0.1:3001`，`apk add ffmpeg` 提供成片能力；日志出现
+  `TRAVEL_STORY_READY` 即完成。代码在 `/opt/travel-story-src/repo`，
+  数据（行程/素材/录像）在 `/opt/travel-story-src/repo/travel-story/data/`，
+  升级前备份；重新触发该 Docker 项目会自动拉取分支最新提交并重建。
+- nginx：在 `ke-journey.bordy.cn.conf` 追加（置于静态 location 之前，`^~` 保证
+  前缀优先于 `.css/.js` 的 regex 缓存规则；**前缀不带尾斜杠**——Next 会把
+  `/travel-story/` 308 到 `/travel-story`，带斜杠的 location 接不住）：
+  ```nginx
+  location ^~ /travel-story {
+      proxy_pass http://127.0.0.1:3001;
+      proxy_http_version 1.1;
+      proxy_set_header Host $host;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header X-Forwarded-Proto $scheme;
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Connection "upgrade";
+      proxy_read_timeout 600s;
+      client_max_body_size 600m;   # 素材与录像上传
+  }
+  ```
+  修改后按本文档顶部流程 `nginx -t` 校验并重启 VPS。
+- 互链：主站 `NEXT_PUBLIC_TRAVEL_STORY_URL=https://ke-journey.bordy.cn/travel-story/`
+  （已为默认值），工具 `NEXT_PUBLIC_KEJOURNEY_URL=https://ke-journey.bordy.cn/`。
+- 上线验证：`curl https://ke-journey.bordy.cn/travel-story` 200；
+  `curl https://ke-journey.bordy.cn/travel-story/api/trips` 200；
+  首页 HTML 含 `/travel-story/_next/` 资源引用。
+- 安全：上游业务 API 无登录校验，只监听内网并由可信反代暴露。
+
 ## 上线验证清单
 
 ```bash
