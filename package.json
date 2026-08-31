@@ -11,6 +11,7 @@
     "start": "vinext start",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "optimize:images": "node scripts/optimize-images.mjs",
+    "sync:travel-story": "node scripts/sync-travel-story-seed.mjs",
     "export:mini": "node scripts/gen-marker-icons.mjs && node scripts/export-mini-data.mjs",
     "test:mini": "node scripts/export-mini-data.mjs && node --test tests/mini-data.test.mjs",
     "e2e:mini": "node tests/mini-e2e.mjs",

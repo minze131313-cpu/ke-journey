@@ -24,7 +24,14 @@ const eslintConfig = defineConfig([
       '@typescript-eslint/no-require-imports': 'off',
     },
   },
-  globalIgnores(['.next/**', 'out/**', 'build/**', 'next-env.d.ts']),
+  // travel-story/ 是独立应用（Next 15），有自己的依赖与 lint 体系，主站不检查
+  globalIgnores([
+    '.next/**',
+    'out/**',
+    'build/**',
+    'next-env.d.ts',
+    'travel-story/**',
+  ]),
 ]);
 
 export default eslintConfig;

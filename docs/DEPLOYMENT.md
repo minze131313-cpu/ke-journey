@@ -126,6 +126,27 @@ location /api/ {
 - 若上游代理地址/token 变更，同时更新：VPS nginx 配置、本地 `.env.local`、
   `app/lib/travel-api.ts` 注释与本文档。
 
+## Travel Story 独立部署（travel-story/ 分支）
+
+仓库 `travel-story` 分支含 `travel-story/` 子目录（Travel Story 旅行影片工具，
+Next.js 15 带服务端 API），与静态主站不同：它需要 Node 进程常驻，**独立目录部署**：
+
+```
+VPS 独立目录 /opt/travel-story/
+  ├─ repo/          ← 本仓库 travel-story 分支的 travel-story/ 子目录
+  ├─ .env.local     ← GAODE_KEY / LOCATIONIQ_KEY / NEXT_PUBLIC_KEJOURNEY_URL
+  └─ data/          ← 行程、素材、录像（升级前备份）
+```
+
+- 进程：`npm ci && npm run build` 后 `npm start -- -H 127.0.0.1 -p 3001`
+  （用 systemd 常驻），不需要 ffmpeg 也能用规划与预览，成片需宿主机 ffmpeg。
+- 域名：`travel-story.bordy.cn` 独立 server 块，nginx 反代 `127.0.0.1:3001`，
+  `client_max_body_size 600m`（素材/录像上传）；主站 `NEXT_PUBLIC_TRAVEL_STORY_URL`
+  与工具 `NEXT_PUBLIC_KEJOURNEY_URL` 互指。
+- 数据同步：主站青甘环线行程是唯一数据源，改主站数据后跑
+  `npm run sync:travel-story` 再构建发布（详见 travel-story/KEJOURNEY.md）。
+- 安全：上游业务 API 无登录校验，只监听内网并由可信反代暴露。
+
 ## 上线验证清单
 
 ```bash

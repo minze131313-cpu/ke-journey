@@ -100,6 +100,17 @@ npm run mp:preview      # 终端预览二维码；npm run mp:upload -- -v 0.1.0 
 - 实拍打卡（云开发 + DeepSeek 视觉 API）：行程主页/POI 页「拍照」→ 定位匹配最近节点 → 云存储 → `cloudfunctions/analyze-photo` 云函数调用 `deepseek-v4-flash-vision-exp` 输出分类与一句话描述 → 节点实拍区展示。前置：开通云开发并在 `miniprogram/config.js` 填环境 ID、创建 `user_photos` 集合、部署云函数、配置 `DEEPSEEK_API_KEY` 环境变量、后台申请 getLocation 权限并更新隐私指引。
 - 发布：`mp:upload` 上传开发版本后，体验版设置、提审与发布需在 mp.weixin.qq.com 手动完成（个人主体无提审 API）；新小程序发布前需完成 ICP 备案。
 
+## Travel Story 旅行影片工具（travel-story/ 独立应用）
+
+`travel-story/` 子目录整合了 [wang-bool/Travel-Story](https://github.com/wang-bool/Travel-Story)（MIT License）——按天规划行程、上传照片视频、让地图镜头与字幕沿时间线自动合成旅行影片的自部署工具，与主站双向互链：
+
+- 主站「青甘大环线」12 天行程已预置为该应用的内置行程，打开即可规划与成片；
+- 种子数据由主站行程自动生成（唯一数据管道）：`npm run sync:travel-story`
+  把 `app/journeys/qinggan-loop/trip-data.ts` 同步为 `travel-story/lib/kejourney-seed.data.ts`；
+- 主站首页「Travel Story」卡片 ↔ 工具首页「KE 路书」双向入口；
+- 运行：`cd travel-story && npm install && cp .env.example .env.local && npm run dev`；
+- 集成说明与独立目录部署见 [travel-story/KEJOURNEY.md](travel-story/KEJOURNEY.md)。
+
 ## 图片与资料
 
 详情页的图片署名、原始链接和资料来源维护在 `app/journeys/<slug>/detail-data.ts` 中。仓库中的不同图片可能采用不同的开放许可或转载条件；再次分发或商用前，请逐项遵守对应来源的许可要求。`public/detail/opt/` 下的 WebP 文件由脚本从原图生成，原图仍保留供 OG 分享图与旧浏览器兜底。
