@@ -15,6 +15,7 @@
 import { buildTimeline, playTrip, type PlaybackController } from "@/lib/map/playback";
 import type { TravelMapEngine } from "@/lib/map/engine";
 import type { Trip } from "@/lib/types";
+import { api } from "@/lib/base";
 import type { Compositor } from "./compositor";
 import { prewarmTimeline } from "./prewarm";
 
@@ -163,7 +164,7 @@ export function recordRealtime({
       });
       if (cancelled) return null;
       const res = await fetch(
-        `/api/recordings?trip=${encodeURIComponent(trip.name)}&ext=${ext}`,
+        api(`/api/recordings?trip=${encodeURIComponent(trip.name)}&ext=${ext}`),
         {
           method: "POST",
           headers: { "Content-Type": blob.type || `video/${ext}` },

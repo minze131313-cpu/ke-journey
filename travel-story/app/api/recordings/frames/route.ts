@@ -7,6 +7,7 @@ import { execFile } from "child_process";
 import { promises as fs } from "fs";
 import path from "path";
 import { ensureDirs, RECORDINGS_DIR } from "@/lib/server/db";
+import { BASE_PATH } from "@/lib/base";
 import {
   declaredBodyExceeds,
   getLimitBytes,
@@ -53,7 +54,7 @@ export async function POST(req: NextRequest) {
       return Response.json({
         ok: true,
         file: finalFile,
-        url: `/api/recordings/${finalFile}`,
+        url: `${BASE_PATH}/api/recordings/${finalFile}`,
         size: stat.size,
       });
     }

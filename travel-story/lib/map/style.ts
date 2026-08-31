@@ -12,6 +12,7 @@
 // ============================================================
 
 import type { LayerSpecification, StyleSpecification } from "maplibre-gl";
+import { api } from "@/lib/base";
 
 // ------------------------------------------------------------
 // 底图数据源（唯一配置点，方便未来切换）
@@ -25,8 +26,8 @@ import type { LayerSpecification, StyleSpecification } from "maplibre-gl";
 // 下面的 UPSTREAM 只被该代理用作回源地址。
 // ------------------------------------------------------------
 export const TILES_UPSTREAM = "https://tiles.openfreemap.org";
-const MAP_TILES_URL = "/api/tiles/planet";
-const MAP_GLYPHS_URL = "/api/tiles/fonts/{fontstack}/{range}.pbf";
+const MAP_TILES_URL = api("/api/tiles/planet");
+const MAP_GLYPHS_URL = api("/api/tiles/fonts/{fontstack}/{range}.pbf");
 
 // ------------------------------------------------------------
 // 底图模式（界面右上角一键切换，见 TravelMap）：

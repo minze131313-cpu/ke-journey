@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useTrips } from "@/lib/useStore";
 import { deleteTrip, formatDateCN, tripDays, updateTrip, whenSynced } from "@/lib/store";
 import { seedIfEmpty } from "@/lib/seed";
+import { api } from "@/lib/base";
 import { CreateTripModal } from "@/components/CreateTripModal";
 import { LandmarkGlyph } from "@/components/LandmarkMarker";
 import { GlobeMap, type GlobeHandle, type GlobeMarker } from "@/components/GlobeMap";
@@ -83,7 +84,7 @@ export default function HomePage() {
           if (s.city && s.country) continue;
           if (!live) return;
           try {
-            const res = await fetch(`/api/geocode?lat=${s.latitude}&lng=${s.longitude}`);
+            const res = await fetch(api(`/api/geocode?lat=${s.latitude}&lng=${s.longitude}`));
             const j = await res.json();
             if (j.city || j.country) {
               s.city = s.city ?? j.city;

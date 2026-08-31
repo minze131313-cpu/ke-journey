@@ -27,6 +27,7 @@ import { formatDistance } from "@/lib/routing";
 import type { Timeline } from "@/lib/map/playback";
 import type { TravelMapEngine } from "@/lib/map/engine";
 import type { Trip } from "@/lib/types";
+import { api } from "@/lib/base";
 import type { Compositor } from "./compositor";
 import { prewarmTimeline, settle, type MapInstance } from "./prewarm";
 import { Muxer, ArrayBufferTarget } from "mp4-muxer";
@@ -247,7 +248,7 @@ export function renderOffline({
       yieldChannel?.port1.close();
       yieldChannel?.port2.close();
       if (cancelled && session) {
-        fetch(`/api/recordings/frames?session=${session}`, { method: "DELETE" }).catch(() => {});
+        fetch(api(`/api/recordings/frames?session=${session}`), { method: "DELETE" }).catch(() => {});
       }
     }
   };
@@ -350,7 +351,7 @@ function createWebCodecsSink(
       if (encoderError) throw encoderError;
       muxer.finalize();
       const res = await fetch(
-        `/api/recordings?trip=${encodeURIComponent(tripName)}&ext=mp4`,
+        api(`/api/recordings?trip=${encodeURIComponent(tripName)}&ext=mp4`),
         {
           method: "POST",
           headers: { "Content-Type": "video/mp4" },
@@ -398,7 +399,7 @@ function createJpegSink(session: string, tripName: string, fps: number): FrameSi
       fd.append("frames", f.blob, `${String(f.idx).padStart(6, "0")}.jpg`);
     }
     batch = [];
-    const up = fetch(`/api/recordings/frames?session=${session}`, {
+    const up = fetch(api(`/api/recordings/frames?session=${session}`), {
       method: "POST",
       body: fd,
     }).then((res) => {
@@ -448,7 +449,7 @@ function createJpegSink(session: string, tripName: string, fps: number): FrameSi
         if (s.status === "rejected") throw s.reason;
       }
       const res = await fetch(
-        `/api/recordings/frames?session=${session}&finalize=1&trip=${encodeURIComponent(tripName)}&fps=${fps}`,
+        api(`/api/recordings/frames?session=${session}&finalize=1&trip=${encodeURIComponent(tripName)}&fps=${fps}`),
         { method: "POST" }
       );
       const json = await res.json();

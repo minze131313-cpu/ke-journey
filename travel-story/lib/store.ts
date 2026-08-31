@@ -13,6 +13,7 @@
 
 import { TRANSPORT_KIND } from "./types";
 import type { MediaMeta, Transport, Trip, TripDay, TripSegment, TripStop } from "./types";
+import { api } from "./base";
 
 const STORAGE_KEY = "travel-story:v1";
 export const DEFAULT_TRANSPORT: Transport = "car";
@@ -83,7 +84,7 @@ async function pushToServer() {
   if (!cache) return;
   const body = JSON.stringify(cache);
   try {
-    const res = await fetch("/api/trips", {
+    const res = await fetch(api("/api/trips"), {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body,
@@ -102,7 +103,7 @@ async function pushToServer() {
  */
 async function syncFromServer() {
   try {
-    const res = await fetch("/api/trips");
+    const res = await fetch(api("/api/trips"));
     if (!res.ok) return;
     const server = (await res.json()) as { trips?: unknown[] };
     const serverTrips = Array.isArray(server.trips) ? server.trips : [];

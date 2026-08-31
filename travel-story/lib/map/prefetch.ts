@@ -13,8 +13,9 @@
 // ============================================================
 
 import type { TripStop } from "@/lib/types";
+import { api } from "@/lib/base";
 
-const TILEJSON_URL = "/api/tiles/planet"; // 本地代理（返回的 tiles[] 同为代理 URL）
+const TILEJSON_URL = api("/api/tiles/planet"); // 本地代理（返回的 tiles[] 同为代理 URL）
 const MAX_TILES = 600;
 const CONCURRENCY = 4;
 /** 每个站点预热的 [zoom, 半径(格)]：z10-11 5×5，z12-14 3×3（z15 由 z14 过度放大覆盖） */

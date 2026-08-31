@@ -1,0 +1,43 @@
+# ============================================================
+# Travel Story 独立目录发布（Hostinger API · 方式 A）
+#
+# 用法见 docs/DEPLOYMENT.md「Travel Story 独立部署」章节：
+#   POST /api/vps/v1/virtual-machines/{vpsId}/docker
+#   {project_name: "ke-journey-travel-story", content: <本文件内容>}
+# 日志出现 TRAVEL_STORY_READY 即构建完成，服务监听 127.0.0.1:3001。
+#
+# 前置（hPanel / 已有容器内手动一次）：
+#   1. mkdir -p /opt/travel-story /opt/travel-story-src
+#   2. /opt/travel-story/.env.local（600 权限）：
+#        GAODE_KEY=...            # 高德「Web服务」key
+#        LOCATIONIQ_KEY=...       # 可选
+#        NEXT_PUBLIC_KEJOURNEY_URL=https://ke-journey.bordy.cn/
+#        NEXT_PUBLIC_BASE_PATH=/travel-story
+#   3. nginx 的 ke-journey.bordy.cn.conf 增加 location ^~ /travel-story/ 反代块
+#      （见 travel-story/KEJOURNEY.md），校验后重启 VPS。
+# ============================================================
+
+services:
+  travel-story:
+    image: node:22-alpine
+    container_name: ke-journey-travel-story
+    # 让宿主 nginx 直连 127.0.0.1:3001（与 ke-journey-api 桥接容器一致）
+    network_mode: host
+    restart: always
+    working_dir: /src/repo/travel-story
+    volumes:
+      - /opt/travel-story:/app            # 密钥目录（.env.local，只读使用）
+      - /opt/travel-story-src:/src        # 代码与 data/（行程、素材、录像持久化）
+    command: >
+      sh -c "apk add --no-cache git ffmpeg &&
+        if [ ! -d /src/repo/.git ]; then
+          git clone --depth 1 --branch travel-story https://github.com/minze131313-cpu/ke-journey.git /src/repo;
+        else
+          (cd /src/repo && git fetch --depth 1 origin travel-story && git checkout -B travel-story origin/travel-story);
+        fi &&
+        cp /app/.env.local /src/repo/travel-story/.env.local &&
+        cd /src/repo/travel-story &&
+        npm ci --no-audit --no-fund &&
+        npm run build &&
+        echo TRAVEL_STORY_READY &&
+        exec npm start -- -H 127.0.0.1 -p 3001"

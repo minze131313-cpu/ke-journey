@@ -23,6 +23,7 @@ import { promises as fs } from "fs";
 import path from "path";
 import { DatabaseSync } from "node:sqlite";
 import { TILES_UPSTREAM } from "@/lib/map/style";
+import { BASE_PATH } from "@/lib/base";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -141,7 +142,9 @@ async function serveTileJSON(origin: string): Promise<Response> {
   try {
     const json = JSON.parse(raw.toString("utf8"));
     if (Array.isArray(json.tiles)) {
-      json.tiles = json.tiles.map((u: string) => u.replace(TILES_UPSTREAM, origin + "/api/tiles"));
+      json.tiles = json.tiles.map((u: string) =>
+        u.replace(TILES_UPSTREAM, origin + BASE_PATH + "/api/tiles")
+      );
     }
     return new Response(JSON.stringify(json), {
       headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=3600" },

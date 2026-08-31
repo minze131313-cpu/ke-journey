@@ -15,6 +15,7 @@
 import greatCircle from "@turf/great-circle";
 import { distance as turfDistance } from "@turf/distance";
 import { TRANSPORT_KIND } from "./types";
+import { api } from "@/lib/base";
 import type { RouteGeometry, Transport } from "./types";
 
 export interface RouteResult {
@@ -105,7 +106,7 @@ async function domesticRoute(
 ): Promise<RouteResult> {
   const profile = DOMESTIC_PROFILE[transport];
   const res = await fetch(
-    `/api/route?from=${from[0]},${from[1]}&to=${to[0]},${to[1]}&profile=${profile}`
+    api(`/api/route?from=${from[0]},${from[1]}&to=${to[0]},${to[1]}&profile=${profile}`)
   );
   const json = await res.json();
   if (!res.ok) throw new Error(json.error ?? `HTTP ${res.status}`);

@@ -3,9 +3,9 @@ import Link from "next/link";
 import MediaImage from "./components/media-image";
 import { journeys } from "./journeys/registry";
 
-/** Travel Story 旅行影片工具站点地址（独立部署）；构建时可用环境变量覆盖 */
+/** Travel Story 旅行影片工具站点地址（发布在原域名 /travel-story/ 目录下）；构建时可用环境变量覆盖 */
 const TRAVEL_STORY_URL =
-  process.env.NEXT_PUBLIC_TRAVEL_STORY_URL ?? "https://travel-story.bordy.cn/";
+  process.env.NEXT_PUBLIC_TRAVEL_STORY_URL ?? "https://ke-journey.bordy.cn/travel-story/";
 
 export const metadata: Metadata = {
   title: { absolute: "KE Journey｜把每一次远行整理成可以出发的路书" },

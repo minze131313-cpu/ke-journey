@@ -30,48 +30,80 @@
 cd travel-story
 npm install
 cp .env.example .env.local   # 至少配置 GAODE_KEY 或 LOCATIONIQ_KEY，否则地点搜索无结果
-npm run dev                  # 打开 http://localhost:3000
+npm run dev                  # 默认 NEXT_PUBLIC_BASE_PATH=/travel-story → http://localhost:3000/travel-story/
 ```
 
+> 本地想不带子路径，把 `.env.local` 的 `NEXT_PUBLIC_BASE_PATH` 留空；
 > 若与主站 `npm run dev` 端口冲突，用 `npm run dev -- -p 3001` 换端口，
 > 并把主站 `.env.local` 的 `NEXT_PUBLIC_TRAVEL_STORY_URL` 指向它。
 
 检查：`npm run typecheck` · `npm run test` · `npm run build && npm start`。
 生成影片还需要系统安装 ffmpeg（上游要求），规划与预览不受影响。
 
-## 独立发布（独立目录部署）
+## 线上发布（原域名独立目录 ke-journey.bordy.cn/travel-story/）
 
 本应用是带服务端 API 的 Next.js 应用（行程、素材、录像写在本目录 `data/`），
-与主站「静态导出 + nginx 目录」的发布方式不同，部署方式为**独立目录 + Node 进程**：
+与主站「静态导出 + nginx 目录」不同，部署方式是 **VPS 独立目录 + Node 常驻进程 +
+nginx 子目录反代**。发布链路沿用主站方式 A（Hostinger API + Docker，见
+`docs/DEPLOYMENT.md`），compose 模板见仓库 `docs/travel-story-compose.yml`。
+
+### VPS 目录
 
 ```
-VPS 上独立目录，如 /opt/travel-story/
-  ├─ repo/                  ← git clone（本仓库 travel-story 分支的 travel-story/ 子目录）
-  ├─ .env.local             ← GAODE_KEY / LOCATIONIQ_KEY / NEXT_PUBLIC_KEJOURNEY_URL
-  └─ data/                  ← 行程、素材、录像（备份先于升级）
+/opt/travel-story/.env.local      ← GAODE_KEY / LOCATIONIQ_KEY /
+                                     NEXT_PUBLIC_KEJOURNEY_URL /
+                                     NEXT_PUBLIC_BASE_PATH=/travel-story
+/opt/travel-story-src/repo/       ← 容器内 git clone（travel-story 分支）
+/opt/travel-story-src/repo/travel-story/data/   ← 行程、素材、录像（升级前备份）
 ```
 
-```bash
-cd /opt/travel-story/repo
-npm ci
-cp .env.example .env.local && $EDITOR .env.local
-npm run build
-# 生产进程（示例 systemd 单元，监听 127.0.0.1:3001）
-npm start -- -H 127.0.0.1 -p 3001
-```
+### 子路径支持（重要）
 
-nginx 只对外开放 `travel-story.bordy.cn` 这个独立 server 块：
+应用通过 `NEXT_PUBLIC_BASE_PATH=/travel-story` 同时驱动两处：
+
+- `next.config.ts` 的 `basePath`：页面路由与 `/_next/` 静态资源自动带前缀；
+- `lib/base.ts` 的 `api()`：所有客户端 `fetch("/api/...")`、瓦片/字形 URL 与
+  服务端返回的素材链接都经它拼前缀（`<Link>` / `useRouter` 由 Next 自动处理）。
+
+**改了任何 API 调用后必须在构建与启动环境里同时带上这个变量**，否则目录下
+资源与接口全部 404。独立域名/端口部署时把它留空即回到原行为。
+
+### nginx（ke-journey.bordy.cn.conf 内追加，置于静态 location 之前）
 
 ```nginx
-location / {
+# 必须用 ^~：让 /travel-story 前缀优先于 .css/.js 的 regex 缓存规则，
+# 否则 /travel-story/_next/static/*.js 会被主站静态目录吞掉。
+# 注意前缀不带尾斜杠：Next 会把 /travel-story/ 308 到 /travel-story，
+# 带斜杠的 location 接不住这个跳转目标。
+location ^~ /travel-story {
     proxy_pass http://127.0.0.1:3001;
     proxy_http_version 1.1;
     proxy_set_header Host $host;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
     proxy_set_header Upgrade $http_upgrade;
     proxy_set_header Connection "upgrade";
+    proxy_read_timeout 600s;
     client_max_body_size 600m;   # 素材与录像上传
 }
+```
+
+### 进程（容器内命令要点）
+
+```
+apk add --no-cache ffmpeg git     # 成片需要 ffmpeg
+git clone --depth 1 --branch travel-story https://github.com/minze131313-cpu/ke-journey.git
+cp /app/.env.local travel-story/.env.local
+cd travel-story && npm ci && npm run build   # build 时读 .env.local 的 NEXT_PUBLIC_BASE_PATH
+npm start -- -H 127.0.0.1 -p 3001
+```
+
+### 上线验证
+
+```bash
+curl -s -o /dev/null -w "%{http_code}" https://ke-journey.bordy.cn/travel-story          # 200
+curl -s -o /dev/null -w "%{http_code}" https://ke-journey.bordy.cn/travel-story/api/trips # 200 JSON
+curl -sL https://ke-journey.bordy.cn/travel-story/ | grep -c "/travel-story/_next"        # ≥1
 ```
 
 安全边界（来自上游 README）：业务 API 无登录校验，只应监听内网并由可信

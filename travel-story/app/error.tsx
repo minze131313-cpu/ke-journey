@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { BASE_PATH } from "@/lib/base";
 
 export default function GlobalError({
   error,
@@ -26,7 +27,7 @@ export default function GlobalError({
         <button className="btn" onClick={() => reset()}>
           重试
         </button>
-        <a className="btn btn-ghost" href="/">
+        <a className="btn btn-ghost" href={`${BASE_PATH}/`}>
           返回首页
         </a>
       </div>

@@ -7,14 +7,16 @@
 // 将来换对象存储（S3 等）时只需改这三个函数的实现。
 // ============================================================
 
+import { api } from "./base";
+
 /** 素材直链（<img>/<video> 直接用，浏览器自己缓存） */
 export function mediaUrl(id: string): string {
-  return `/api/media/${encodeURIComponent(id)}`;
+  return api(`/api/media/${encodeURIComponent(id)}`);
 }
 
 export async function putMediaBlob(id: string, file: File): Promise<void> {
   const res = await fetch(
-    `/api/media?id=${encodeURIComponent(id)}&name=${encodeURIComponent(file.name)}`,
+    api(`/api/media?id=${encodeURIComponent(id)}&name=${encodeURIComponent(file.name)}`),
     {
       method: "POST",
       headers: { "Content-Type": file.type || "application/octet-stream" },
@@ -29,7 +31,7 @@ export async function putMediaBlob(id: string, file: File): Promise<void> {
 
 export async function deleteMediaBlob(id: string): Promise<void> {
   try {
-    await fetch(`/api/media/${encodeURIComponent(id)}`, { method: "DELETE" });
+    await fetch(api(`/api/media/${encodeURIComponent(id)}`), { method: "DELETE" });
   } catch (e) {
     console.warn("[travel-story] 删除服务端素材失败", e);
   }

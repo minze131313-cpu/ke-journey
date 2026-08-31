@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { STOP_TYPE_LABEL } from "@/lib/types";
 import type { SearchResult, StopType } from "@/lib/types";
+import { api } from "@/lib/base";
 
 export function PlaceSearch({
   onPick,
@@ -49,7 +50,7 @@ export function PlaceSearch({
       const c = new AbortController();
       abortRef.current = c;
       // 走服务端代理：key 不进前端；未配置 key 时服务端返回 configured:false
-      fetch(`/api/geocode?q=${encodeURIComponent(term)}`, { signal: c.signal })
+      fetch(api(`/api/geocode?q=${encodeURIComponent(term)}`), { signal: c.signal })
         .then((res) => (res.ok ? res.json() : { results: [], configured: true }))
         .then((data: { results: SearchResult[]; configured?: boolean }) => {
           setConfigured(data.configured !== false);
