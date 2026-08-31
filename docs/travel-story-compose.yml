@@ -27,7 +27,6 @@ services:
     # 让宿主 nginx 直连 127.0.0.1:3001（与 ke-journey-api 桥接容器一致）
     network_mode: host
     restart: always
-    working_dir: /src/repo/travel-story
     volumes:
       - /opt/travel-story:/app            # 密钥目录（.env.local，只读使用）
       - /opt/travel-story-src:/src        # 代码与 data/（行程、素材、录像持久化）
@@ -36,6 +35,7 @@ services:
       - -lc
       - |-
         set -eu
+        cd /
         apk add --no-cache git ffmpeg
         if [ ! -d /src/repo/.git ]; then
           rm -rf /src/repo;
