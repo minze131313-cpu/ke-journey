@@ -6,12 +6,13 @@
 
 ## 结合点
 
-1. **内置目的地行程**：主站「青甘大环线」12 天行程已预置为 Travel Story 的内置行程。
-   首次打开（且服务端无数据）时自动种入，打开即可开始规划、补照片视频、生成旅行影片。
+1. **内置目的地行程**：主站「青甘大环线」（12 天）与「国庆广西 · 香港之旅」（14 天）已预置为
+   Travel Story 的内置行程。首次打开（且服务端无数据）时自动种入，打开即可开始规划、补照片视频、生成旅行影片。
 2. **单一数据管道**：种子数据不是手抄的。主站
-   `app/journeys/qinggan-loop/trip-data.ts` 是唯一数据源，根目录脚本
-   `scripts/sync-travel-story-seed.mjs` 把它转成 `lib/kejourney-seed.data.ts`。
-   主站行程改动后运行：
+   `app/journeys/<slug>/trip-data.ts` 是唯一数据源，根目录脚本
+   `scripts/sync-travel-story-seed.mjs` 把它转成 `lib/kejourney-seed.data.ts` 的
+   `KEJOURNEY_SEEDS` 数组。新增主站旅程时，在脚本顶部的 `JOURNEYS` 里登记 slug
+   与行程元数据（名称、起止日期、起点、区域、简介），再运行：
    ```bash
    # 在仓库根目录
    npm run sync:travel-story

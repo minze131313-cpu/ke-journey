@@ -19,7 +19,10 @@
         <view class="row-wrap" style="margin-top: 20rpx;">
           <text class="mini-chip" wx:for="{{item.stats}}" wx:key="*this">{{item}}</text>
         </view>
-        <view class="btn btn-primary card-cta" hover-class="btn-hover" bindtap="openJourney" data-slug="{{item.slug}}">打开路书 →</view>
+        <view class="card-actions" style="margin-top: 20rpx;">
+          <view class="btn btn-primary card-cta" hover-class="btn-hover" bindtap="openJourney" data-slug="{{item.slug}}">打开路书 →</view>
+          <view class="btn btn-ghost card-cta" hover-class="btn-hover" bindtap="openGallery" data-slug="{{item.slug}}">旅行画廊</view>
+        </view>
       </view>
     </view>
 

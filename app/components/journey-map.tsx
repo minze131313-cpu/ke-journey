@@ -24,6 +24,7 @@ const categoryLabels: Record<Filter, string> = {
   city: "住宿",
   supply: "补给",
   warning: "风险",
+  expo: "展会",
 };
 
 const categorySymbols: Record<Category, string> = {
@@ -31,9 +32,36 @@ const categorySymbols: Record<Category, string> = {
   city: "宿",
   supply: "补",
   warning: "险",
+  expo: "展",
 };
 
-const filterSymbols: Record<Filter, string> = { all: "环", ...categorySymbols };
+/**
+ * 环线旅程（terminalPlaceId 指向起终点节点）与线性旅程（terminalPlaceId 为空）
+ * 共用同一套界面，仅总览 / 方向 / 图钉文案不同，避免把线性行程写成「环线」。
+ */
+function journeyCopy(isLoop: boolean) {
+  return isLoop
+    ? {
+        overviewTitle: "完整环线总览",
+        overviewBadge: "全图",
+        overviewIcon: "↻",
+        directionKicker: "环线方向",
+        fitAllLabel: "全环",
+        loadingText: "正在整理完整环线…",
+        terminalLabel: "环线起终点",
+        filterAllSymbol: "环",
+      }
+    : {
+        overviewTitle: "完整行程总览",
+        overviewBadge: "全程",
+        overviewIcon: "⇢",
+        directionKicker: "行程方向",
+        fitAllLabel: "全程",
+        loadingText: "正在整理完整行程…",
+        terminalLabel: "行程起终点",
+        filterAllSymbol: "全",
+      };
+}
 
 function loadAmap() {
   if (typeof window === "undefined") return Promise.reject(new Error("browser only"));
@@ -67,9 +95,9 @@ function amapStyleForTheme(theme: string | undefined): string {
   return "amap://styles/whitesmoke";
 }
 
-function markerContent(place: Place, terminalPlaceId: string) {
+function markerContent(place: Place, terminalPlaceId: string, terminalLabel: string) {
   if (place.id === terminalPlaceId) {
-    return `<button class="loop-terminal-pin" aria-label="环线起点和终点：${place.name}"><span><i>起</i><i>终</i></span><b>${place.name}</b><small>环线起终点</small></button>`;
+    return `<button class="loop-terminal-pin" aria-label="行程起点和终点：${place.name}"><span><i>起</i><i>终</i></span><b>${place.name}</b><small>${terminalLabel}</small></button>`;
   }
   return `<button class="poi-pin poi-${place.category}" aria-label="${place.name}"><span>${categorySymbols[place.category]}</span><b>${place.name}</b></button>`;
 }
@@ -83,6 +111,13 @@ export default function JourneyMap({ journey }: { journey: Journey }) {
   const { places, days, routeRoads, tripStats } = journey.trip;
   const tripBase = `/${slug}`;
   const extendedStayDays = config.extendedStayDays;
+  const isLoop = Boolean(config.terminalPlaceId);
+  const copy = journeyCopy(isLoop);
+  const filters = useMemo(() => {
+    const available = new Set(places.map((place) => place.category));
+    return (Object.keys(categoryLabels) as Filter[]).filter((key) => key === "all" || available.has(key));
+  }, [places]);
+  const filterSymbol = (key: Filter) => (key === "all" ? copy.filterAllSymbol : categorySymbols[key]);
 
   const mapNode = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
@@ -175,7 +210,7 @@ export default function JourneyMap({ journey }: { journey: Journey }) {
         const marker = new AMap.Marker({
           position: place.coords,
           title: place.name,
-          content: markerContent(place, config.terminalPlaceId),
+          content: markerContent(place, config.terminalPlaceId, copy.terminalLabel),
           offset: place.id === config.terminalPlaceId ? new AMap.Pixel(-38, -60) : new AMap.Pixel(-17, -17),
           zIndex: place.category === "warning" ? 130 : 100,
         });
@@ -378,9 +413,9 @@ export default function JourneyMap({ journey }: { journey: Journey }) {
           {tab === "plan" && (
             <section className="day-list">
               <button className={`all-route-card ${activeDay === 0 ? "active" : ""}`} onClick={() => chooseDay(0)}>
-                <span className="route-ring">↻</span>
-                <span><b>完整环线总览</b><small>{config.loopSummary}</small></span>
-                <em>全图</em>
+                <span className="route-ring">{copy.overviewIcon}</span>
+                <span><b>{copy.overviewTitle}</b><small>{config.loopSummary}</small></span>
+                <em>{copy.overviewBadge}</em>
               </button>
               {filteredDays.map((day) => (
                 <article className={`day-card ${activeDay === day.day ? "active" : ""}`} key={day.day}>
@@ -438,8 +473,8 @@ export default function JourneyMap({ journey }: { journey: Journey }) {
         <div ref={mapNode} className="map-canvas" aria-label={`${config.title}高德交互地图`} />
         {mapStatus !== "ready" && (
           <div className={`map-loader ${mapStatus === "error" ? "error" : ""}`}>
-            <span>{mapStatus === "error" ? "!" : "环"}</span>
-            <b>{mapStatus === "error" ? "高德地图没有加载成功" : "正在整理完整环线…"}</b>
+            <span>{mapStatus === "error" ? "!" : copy.filterAllSymbol}</span>
+            <b>{mapStatus === "error" ? "高德地图没有加载成功" : copy.loadingText}</b>
             <small>{mapStatus === "error" ? "请检查网络、Key白名单与安全密钥" : "路线与节点会逐段显示"}</small>
           </div>
         )}
@@ -448,22 +483,23 @@ export default function JourneyMap({ journey }: { journey: Journey }) {
           <button className="mobile-menu" onClick={() => chooseMobileView("trip")} aria-label="打开行程">路线</button>
           <div className="status-pill"><span className={mapStatus === "ready" ? "live-dot" : "wait-dot"} />{mapStatus === "ready" ? "高德地图已连接" : "地图加载中"}</div>
           <div className="filter-pills">
-            {(Object.keys(categoryLabels) as Filter[]).map((item) => <button key={item} className={filter === item ? "active" : ""} onClick={() => setFilter(item)}><i>{filterSymbols[item]}</i>{categoryLabels[item]}</button>)}
+            {filters.map((item) => <button key={item} className={filter === item ? "active" : ""} onClick={() => setFilter(item)}><i>{filterSymbol(item)}</i>{categoryLabels[item]}</button>)}
           </div>
         </div>
 
         <div className="layer-controls">
           <button className={satellite ? "active" : ""} onClick={toggleSatellite}><span>▦</span>卫星</button>
           <button className={traffic ? "active" : ""} onClick={toggleTraffic}><span>≋</span>路况</button>
-          <button onClick={() => chooseDay(0)}><span>◎</span>全环</button>
+          <button onClick={() => chooseDay(0)}><span>◎</span>{copy.fitAllLabel}</button>
         </div>
 
         <div className="map-legend">
-          <span><i className="scenic">景</i>景点</span><span><i className="city">宿</i>住宿</span><span><i className="supply">补</i>补给</span><span><i className="warning">险</i>风险</span><span><i className="closed" />封闭路段</span>
+          {(["scenic","city","supply","warning","expo"] as Category[]).filter((key) => places.some((place) => place.category === key)).map((key) => <span key={key}><i className={key}>{categorySymbols[key]}</i>{categoryLabels[key]}</span>)}
+          {config.closedRoads.length > 0 && <span><i className="closed" />封闭路段</span>}
         </div>
 
-        <div className="route-direction-card" aria-label={`环线方向：${config.directionLabel}`}>
-          <span>↻</span><div><small>环线方向</small><b>{config.directionLabel}</b></div>
+        <div className="route-direction-card" aria-label={`${copy.directionKicker}：${config.directionLabel}`}>
+          <span>{copy.overviewIcon}</span><div><small>{copy.directionKicker}</small><b>{config.directionLabel}</b></div>
         </div>
 
         {activeDay > 0 && (

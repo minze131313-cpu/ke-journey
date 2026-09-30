@@ -1,0 +1,29 @@
+.head-block {
+  padding-top: 32rpx;
+}
+
+.nav-btn {
+  margin-top: 24rpx;
+}
+
+.dim {
+  opacity: 0.4;
+}
+
+.photo-card {
+  display: flex;
+  align-items: flex-start;
+  margin-top: 20rpx;
+  padding: 24rpx;
+}
+
+.photo-thumb {
+  width: 180rpx;
+  height: 180rpx;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+
+.photo-body {
+  margin-left: 24rpx;
+}

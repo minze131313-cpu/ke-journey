@@ -1,6 +1,6 @@
 // 多旅程共享类型：每条旅程的 trip-data.ts / detail-data.ts / config.ts 都从这里取类型。
 
-export type Category = "scenic" | "city" | "supply" | "warning";
+export type Category = "scenic" | "city" | "supply" | "warning" | "expo";
 
 export type Place = {
   id: string;
@@ -112,7 +112,17 @@ export type JourneyConfig = {
   exportFilename: string;
   mapCenter: [number, number];
   mapZoom: number;
+  /**
+   * 环线起终点节点 id。环线旅程填起终点 POI；**线性旅程填空字符串**，
+   * 此时地图不渲染「起/终」图钉，界面文案也从「环线」切换为「行程」。
+   */
   terminalPlaceId: string;
+  /**
+   * 「从这里出发」航班入口挂在哪个节点上：环线旅程不填（默认用 terminalPlaceId），
+   * 线性旅程填行程起点（例如北京首都机场）。
+   */
+  flightPlaceId?: string;
+  /** 按天展示额外命中的节点（例如连住的民宿、展会期间长住的基地）。 */
   extendedStayDays: Record<string, number[]>;
   roads: { kicker: string; lastCheck: string; alert: RoadAlert; notes: RoadNote[] };
   checklist: { groups: ChecklistGroup[]; emergency: EmergencyCard };

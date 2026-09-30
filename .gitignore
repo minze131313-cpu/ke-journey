@@ -37,6 +37,7 @@ next-env.d.ts
 /.wrangler/
 /outputs/
 /work/
+*.tsbuildinfo
 
 # 微信开发者工具个人配置（本地编译设置，不入库）
 miniprogram/project.private.config.json

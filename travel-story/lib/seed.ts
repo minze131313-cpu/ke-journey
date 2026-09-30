@@ -9,26 +9,26 @@
 
 import { createTrip, addDay, addStop, getSnapshot } from "./store";
 import type { StopType } from "./types";
-import { KEJOURNEY_SEED } from "./kejourney-seed.data";
+import { KEJOURNEY_SEEDS, type KeJourneySeed } from "./kejourney-seed.data";
 
 export function seedIfEmpty(): boolean {
   const trips = getSnapshot();
   if (trips.length > 0) return false;
 
-  // 先种入 Travel Story 自带的上海演示行程，再种入 KE Journey 的青甘大环线
+  // 先种入 Travel Story 自带的上海演示行程，再逐条种入 KE Journey 主站旅程
   // （createTrip 头插，后种入的排在列表最前）。
   seedShanghaiDemo();
-  seedKeJourney();
+  for (const seed of KEJOURNEY_SEEDS) seedKeJourney(seed);
   return true;
 }
 
 /**
- * KE Journey 主站「青甘大环线」行程（数据由 scripts/sync-travel-story-seed.mjs
- * 从 app/journeys/qinggan-loop/trip-data.ts 同步而来）。
+ * KE Journey 主站行程（数据由 scripts/sync-travel-story-seed.mjs 从
+ * app/journeys/<slug>/trip-data.ts 同步而来，目前包含青甘大环线与国庆广西·香港之旅）。
  * 路段交通方式沿用默认 car，真实道路路线在规划页打开时异步拉取。
  */
-function seedKeJourney() {
-  const { trip: meta, days: totalDays, stops } = KEJOURNEY_SEED;
+function seedKeJourney(seed: KeJourneySeed) {
+  const { trip: meta, days: totalDays, stops } = seed;
 
   let trip = createTrip({
     name: meta.name,

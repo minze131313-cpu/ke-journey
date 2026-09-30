@@ -4,12 +4,16 @@
     {
       "root": "journeys/qinggan-loop",
       "pages": ["trip/trip", "route/route", "poi/poi", "gallery/gallery"]
+    },
+    {
+      "root": "journeys/guangxi-hk",
+      "pages": ["trip/trip", "route/route", "poi/poi", "gallery/gallery"]
     }
   ],
   "preloadRule": {
     "pages/index/index": {
       "network": "all",
-      "packages": ["journeys/qinggan-loop"]
+      "packages": ["journeys/qinggan-loop", "journeys/guangxi-hk"]
     }
   },
   "permission": {

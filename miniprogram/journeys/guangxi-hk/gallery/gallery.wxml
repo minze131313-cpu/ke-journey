@@ -1,0 +1,138 @@
+<view class="page gallery-page {{scaleClass}}">
+  <view class="gallery-header container">
+    <view class="row-between">
+      <view class="flex-1">
+        <text class="eyebrow">FIELD NOTES · PHOTO GALLERY</text>
+        <view class="t-title">{{cardTitle}} · 旅行画廊</view>
+      </view>
+      <view class="btn btn-ghost clear-btn" hover-class="btn-hover" bindtap="clearFilters" wx:if="{{photos.length > 0}}">清除筛选</view>
+    </view>
+  </view>
+
+  <!-- 未配置云环境 -->
+  <view class="container" wx:if="{{!cloudOk}}">
+    <view class="card">
+      <view class="t-body">画廊需要云开发环境：请确认已开通云开发并在 config.js 填入环境 ID。</view>
+    </view>
+  </view>
+
+  <block wx:else>
+    <!-- 筛选栏 -->
+    <view class="container filter-panel">
+      <block wx:if="{{options.phases.length > 0}}">
+        <view class="filter-label eyebrow">旅程阶段</view>
+        <view class="row-wrap">
+          <view
+            wx:for="{{options.phases}}"
+            wx:key="*this"
+            class="chip {{filters.phase === item ? 'chip-active' : ''}}"
+            hover-class="btn-hover"
+            bindtap="toggleFilter"
+            data-group="phase"
+            data-value="{{item}}"
+          >{{item}}</view>
+        </view>
+      </block>
+      <block wx:if="{{options.cities.length > 0}}">
+        <view class="filter-label eyebrow">城市</view>
+        <view class="row-wrap">
+          <view
+            wx:for="{{options.cities}}"
+            wx:key="*this"
+            class="chip {{filters.city === item ? 'chip-active' : ''}}"
+            hover-class="btn-hover"
+            bindtap="toggleFilter"
+            data-group="city"
+            data-value="{{item}}"
+          >{{item}}</view>
+        </view>
+      </block>
+      <block wx:if="{{options.types.length > 0}}">
+        <view class="filter-label eyebrow">照片类型</view>
+        <view class="row-wrap">
+          <view
+            wx:for="{{options.types}}"
+            wx:key="*this"
+            class="chip {{filters.type === item ? 'chip-active' : ''}}"
+            hover-class="btn-hover"
+            bindtap="toggleFilter"
+            data-group="type"
+            data-value="{{item}}"
+          >{{item}}</view>
+        </view>
+      </block>
+      <block wx:if="{{options.times.length > 0}}">
+        <view class="filter-label eyebrow">时段</view>
+        <view class="row-wrap">
+          <view
+            wx:for="{{options.times}}"
+            wx:key="*this"
+            class="chip {{filters.time === item ? 'chip-active' : ''}}"
+            hover-class="btn-hover"
+            bindtap="toggleFilter"
+            data-group="time"
+            data-value="{{item}}"
+          >{{item}}</view>
+        </view>
+      </block>
+      <block wx:if="{{options.weathers.length > 0}}">
+        <view class="filter-label eyebrow">天气</view>
+        <view class="row-wrap">
+          <view
+            wx:for="{{options.weathers}}"
+            wx:key="*this"
+            class="chip {{filters.weather === item ? 'chip-active' : ''}}"
+            hover-class="btn-hover"
+            bindtap="toggleFilter"
+            data-group="weather"
+            data-value="{{item}}"
+          >{{item}}</view>
+        </view>
+      </block>
+    </view>
+
+    <!-- 空态 -->
+    <view class="container" wx:if="{{sections.length === 0 && photos.length === 0}}">
+      <view class="card">
+        <view class="t-body">画廊还没有照片。去行程主页点「拍照」，每张照片都会自动归档、打标签，并在这里按时间线铺开。</view>
+        <view class="btn btn-primary gallery-cta" hover-class="btn-hover" bindtap="goTrip">去拍照 →</view>
+      </view>
+    </view>
+    <view class="container" wx:elif="{{sections.length === 0}}">
+      <view class="card">
+        <view class="t-body">当前筛选没有结果，试试「清除筛选」。</view>
+      </view>
+    </view>
+
+    <!-- 时间线 -->
+    <view class="container" wx:for="{{sections}}" wx:key="dateKey" wx:for-item="section">
+      <view class="date-header font-display">{{section.dateKey}}</view>
+      <view
+        class="card photo-card"
+        wx:for="{{section.items}}"
+        wx:key="_id"
+        wx:for-item="item"
+        bindtap="onPhotoTap"
+        data-poi-id="{{item.poiId}}"
+        bindlongpress="onPhotoLongPress"
+        data-id="{{item._id}}"
+        data-fileid="{{item.fileID}}"
+      >
+        <image class="photo-img" src="{{item.fileID}}" mode="aspectFill" binderror="onImgError" data-name="g-{{item._id}}" data-src="{{item.fileID}}" />
+        <view class="photo-info">
+          <view class="row-wrap">
+            <text class="mini-chip phase-chip">{{item.phaseLabel}}</text>
+            <text class="mini-chip">{{item.city}}</text>
+            <text class="mini-chip">{{item.typeLabel}}</text>
+            <text class="mini-chip" wx:if="{{item.timeBucket}}">{{item.timeBucket}}</text>
+            <text class="mini-chip" wx:if="{{item.weatherLabel}}">{{item.weatherLabel}}</text>
+          </view>
+          <view class="t-body monologue">{{item.monologue || item.caption}}</view>
+          <view class="t-meta">{{item.placeName}} · {{item.timeText}}<text wx:if="{{item.distanceKm !== null}}"> · 约{{item.distanceKm}}km</text></view>
+        </view>
+      </view>
+    </view>
+
+    <view class="t-small" style="padding: 24rpx 0 64rpx; text-align: center;">长按照片可修改阶段 / 重新分析 / 删除</view>
+  </block>
+</view>

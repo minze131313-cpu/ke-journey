@@ -50,6 +50,8 @@ const media = {
 const kindMeta: Record<Category, { label:string; icon:string }> = {
   scenic: { label:"景点档案", icon:"景" }, city: { label:"住宿档案", icon:"宿" },
   supply: { label:"补给档案", icon:"补" }, warning: { label:"风险档案", icon:"险" },
+  // 本条环线没有展会节点，仅为满足共享 Category 类型的完整性
+  expo: { label:"展会档案", icon:"展" },
 };
 
 const poiMedia: Record<string, MediaAsset> = {

@@ -37,10 +37,13 @@ function hotelSearchKey(place: Place): { place: string; placeType: "城市" | "�
 export default function StaySearch({
   tripBase,
   places,
+  isLoop = true,
 }: {
   tripBase: string;
   places: Place[];
+  isLoop?: boolean;
 }) {
+  const backLabel = isLoop ? "返回环线地图" : "返回行程地图";
   // 静态导出下无法使用服务端 searchParams，从 window.location 懒初始化读取
   const [placeId, setPlaceId] = useState<string | null>(() => {
     if (typeof window === "undefined") return null;
@@ -108,7 +111,7 @@ export default function StaySearch({
     return (
       <main className="travel-shell">
         <header className="travel-header">
-          <Link className="back-map" href={`${tripBase}/`}><span>←</span> 返回环线地图</Link>
+          <Link className="back-map" href={`${tripBase}/`}><span>←</span> {backLabel}</Link>
           <div className="travel-title-wrap">
             <small>STAY DESK · 实时住宿</small>
             <h1>选择停留点</h1>
@@ -134,7 +137,7 @@ export default function StaySearch({
   return (
     <main className="travel-shell">
       <header className="travel-header">
-        <Link className="back-map" href={`${tripBase}/`}><span>←</span> 返回环线地图</Link>
+        <Link className="back-map" href={`${tripBase}/`}><span>←</span> {backLabel}</Link>
         <div className="travel-title-wrap">
           <small>STAY DESK · 实时住宿</small>
           <h1>{place.name} · 住宿查询</h1>

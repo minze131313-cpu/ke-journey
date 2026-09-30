@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // 生成地图 marker 圆形图标（零依赖 PNG 编码），写入 miniprogram/assets/markers/。
-// 分类色沿用 DESIGN.md 图例：景点 gold / 城镇 teal / 补给 blue / 风险 danger。
+// 分类色沿用 DESIGN.md 图例：景点 gold / 城镇 teal / 补给 blue / 风险 danger / 展会 violet。
 import { deflateSync } from "node:zlib";
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
@@ -86,6 +86,7 @@ const icons = {
   city: circleIcon("#07877e", "#fffefa"),
   supply: circleIcon("#3288d8", "#fffefa"),
   warning: circleIcon("#e55748", "#fffefa"),
+  expo: circleIcon("#8e5bd8", "#fffefa"),
   terminal: circleIcon("#07877e", "#f1a530"),
 };
 

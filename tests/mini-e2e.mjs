@@ -370,6 +370,100 @@ try {
   assert.ok(Array.isArray(galleryData.sections), "画廊时间线数据缺失");
   console.log(`✓ 画廊频道：空态正常（${galleryData.sections.length} 个时间分组）`);
 
+  // 9b. 国庆广西 · 香港之旅：线性行程（无起终点图钉）+ 展会分类 + 14 天
+  await retry(
+    () => wxCall("navigateTo", [{ url: "/journeys/guangxi-hk/trip/trip" }]),
+    5,
+    3000,
+    "navigateTo 广西行程主页",
+  );
+  await sleep(3000);
+  cur = await retry(() => current(), 8, 2000, "getCurrentPage 广西行程主页");
+  assert.equal(cur.path, "journeys/guangxi-hk/trip/trip", "广西行程主页路径错误");
+  let gxMap = {};
+  for (let i = 0; i < 25; i++) {
+    gxMap = await pageData(4, "journeys/guangxi-hk/trip/trip");
+    if (gxMap.mapReady && gxMap.markers.length > 0) break;
+    await sleep(1000);
+  }
+  assert.ok(gxMap.mapReady, "广西行程地图未进入 ready 状态");
+  assert.equal(gxMap.tripDays.length, 14, `广西行程列表应为 14 天，实际 ${gxMap.tripDays.length}`);
+  const gxCats = gxMap.categories.map((c) => c.key);
+  assert.ok(gxCats.includes("expo"), `广西行程分类缺少 expo：${gxCats.join(",")}`);
+  assert.ok(!gxCats.includes("warning"), `线性行程不应出现风险分类：${gxCats.join(",")}`);
+  assert.ok(gxMap.legend.some((l) => l.key === "expo"), "广西行程图例缺少展会");
+  assert.ok(
+    gxMap.markers.every((m) => !String(m.iconPath).includes("terminal")),
+    "线性行程不应渲染起终点图钉",
+  );
+  console.log(
+    `✓ 广西行程主页：14 天 / ${gxMap.markers.length} markers / 分类 ${gxCats.join("·")}`,
+  );
+
+  await retry(
+    () => callPageMethod("tapCategory", [{ currentTarget: { dataset: { key: "expo" } } }]),
+    5,
+    2000,
+    "广西行程展会筛选",
+  );
+  await sleep(800);
+  gxMap = await pageData(4, "journeys/guangxi-hk/trip/trip");
+  assert.ok(
+    gxMap.markers.length > 0 && gxMap.markers.length < 31,
+    `展会筛选后 marker 数量异常：${gxMap.markers.length}`,
+  );
+  console.log(`✓ 广西行程筛选「展会」：markers ${gxMap.markers.length}`);
+
+  await retry(
+    () => wxCall("navigateTo", [{ url: "/journeys/guangxi-hk/poi/poi?id=asiaworld-expo" }]),
+    5,
+    3000,
+    "navigateTo 广西 POI",
+  );
+  await sleep(3000);
+  cur = await retry(() => current(), 8, 2000, "getCurrentPage 广西 POI");
+  assert.equal(cur.path, "journeys/guangxi-hk/poi/poi");
+  const gxPoi = await pageData(10, "journeys/guangxi-hk/poi/poi");
+  assert.ok(gxPoi.detail && gxPoi.detail.place.name === "亚洲国际博览馆", "广西 POI 详情未加载");
+  assert.ok(gxPoi.galleryItems.length >= 1, "广西 POI 图集为空");
+  await sleep(1500);
+  const gxPoi2 = await pageData(4, "journeys/guangxi-hk/poi/poi");
+  assert.ok(
+    !gxPoi2.imgErrors || gxPoi2.imgErrors.length === 0,
+    `广西 POI 图片加载失败：${JSON.stringify(gxPoi2.imgErrors)}`,
+  );
+  console.log(`✓ 广西 POI：${gxPoi.detail.place.name}（${gxPoi.galleryItems.length} 图加载正常）`);
+
+  await retry(
+    () => wxCall("navigateTo", [{ url: "/journeys/guangxi-hk/route/route?day=7" }]),
+    5,
+    3000,
+    "navigateTo 广西路线页",
+  );
+  await sleep(3000);
+  cur = await retry(() => current(), 8, 2000, "getCurrentPage 广西路线页");
+  assert.equal(cur.path, "journeys/guangxi-hk/route/route");
+  const gxRoute = await pageData(10, "journeys/guangxi-hk/route/route");
+  assert.ok(gxRoute.detail && gxRoute.detail.day.day === 7, "广西路线详情未加载");
+  assert.ok(gxRoute.rhythm.length >= 3, "广西路线节奏时间线缺失");
+  let gxRouteMap = {};
+  for (let i = 0; i < 15; i++) {
+    gxRouteMap = await pageData(4, "journeys/guangxi-hk/route/route");
+    if (gxRouteMap.dayMapReady) break;
+    await sleep(1000);
+  }
+  assert.ok(gxRouteMap.dayMapReady, "广西当天地图未 ready");
+  assert.ok(gxRouteMap.dayMarkers.length >= 2, "广西当天地图节点缺失");
+  await sleep(1500);
+  const gxRoute2 = await pageData(4, "journeys/guangxi-hk/route/route");
+  assert.ok(
+    !gxRoute2.imgErrors || gxRoute2.imgErrors.length === 0,
+    `广西路线图片加载失败：${JSON.stringify(gxRoute2.imgErrors)}`,
+  );
+  console.log(
+    `✓ 广西路线详情：D7 ${gxRoute.detail.day.title}（${gxRouteMap.dayMarkers.length} 节点节奏，图集加载正常）`,
+  );
+
   // 10. 关于页
   await retry(() => wxCall("navigateTo", [{ url: "/pages/about/about" }]), 5, 3000, "navigateTo 关于页");
   await sleep(2500);

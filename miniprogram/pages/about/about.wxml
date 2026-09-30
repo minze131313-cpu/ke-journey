@@ -6,7 +6,7 @@
     </view>
 
     <view class="card">
-      <view class="t-body">KEJourney 是面向自驾旅行的交互式中文路书：旅程目录、交互地图、逐日线路、节点档案（景点/住宿/补给/风险）与图文详情。本小程序与 Web 版共用同一套旅程数据（<text class="strong">青甘大环线</text>：12 天、约 3,000 公里、25 个地图节点）。</view>
+      <view class="t-body">KEJourney 是面向自驾旅行的交互式中文路书：旅程目录、交互地图、逐日线路、节点档案（景点/住宿/补给/风险/展会）与图文详情。本小程序与 Web 版共用同一套旅程数据：<text class="strong">青甘大环线</text>（12 天、约 3,000 公里、25 个地图节点）与 <text class="strong">国庆广西 · 香港之旅</text>（14 天、约 1,700 公里、31 个地图节点）。</view>
       <view class="t-body" style="margin-top: 20rpx;">地图使用微信小程序原生地图组件，底图为腾讯地图；Web 版的实时驾车规划、卫星与路况图层在小程序端未提供。</view>
     </view>
 

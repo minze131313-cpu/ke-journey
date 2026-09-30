@@ -4,9 +4,8 @@
 
 当前收录：
 
-- 青甘大环线：12 天、约 3,000 公里
-- 25 个地图节点
-- 12 段逐日线路
+- 青甘大环线：12 天、约 3,000 公里，25 个地图节点、12 段逐日线路
+- 国庆广西 · 香港之旅：14 天、约 1,700 公里，31 个地图节点、14 段逐日线路（广西自驾 + 高铁进港 + 香港展会）
 - 手机端 APP 化交互与大字模式
 
 线上版本：[ke-journey.bordy.cn](https://ke-journey.bordy.cn/)
@@ -60,16 +59,22 @@ app/
   journeys/
     types.ts                       共享类型（Place/TripDay/JourneyConfig 等）
     registry.ts                    旅程注册表：新增旅程只改这里
-    qinggan-loop/                  青甘大环线
+    qinggan-loop/                  青甘大环线（环线旅程，terminalPlaceId 指向西宁）
       trip-data.ts                 POI、逐日路线和坐标数据
       detail-data.ts               景点与路段图文资料、来源、图片署名与详情页顺序
       config.ts                    地图页专属文案：绕行告警、准备清单、封闭路段折线等
+    guangxi-hk/                    国庆广西 · 香港之旅（线性旅程，terminalPlaceId 为空）
+      trip-data.ts / detail-data.ts / config.ts  同上四件套
   generated/image-manifest.ts      图片 WebP 档位清单（脚本生成，勿手改）
 public/detail/                     经核验的地点图片
 public/detail/opt/                 生成的 WebP 多尺寸档
 tests/                             静态页面回归测试
 scripts/optimize-images.mjs        WebP 生成脚本
 ```
+
+> 环线与线性旅程共用同一套页面组件：`terminalPlaceId` 为空即判定为线性行程，地图上不再渲染
+> 「起/终」图钉，界面文案从「环线」自动切换为「行程」；`flightPlaceId` 指定「从这里出发」的航班入口节点。
+> 节点分类除 scenic / city / supply / warning 外还有 expo（展会），用于展馆类节点。
 
 ## 新增旅程
 
@@ -94,7 +99,7 @@ npm run mp:preview      # 终端预览二维码；npm run mp:upload -- -v 0.1.0 
 ```
 
 - 数据经 `scripts/export-mini-data.mjs`（Vite SSR 构建 `scripts/mini-export.entry.ts`）生成到 `miniprogram/data/` 与 `miniprogram/journeys/<slug>/`；图片取 640/400px 档并用 sharp **转码为 JPG**（小程序对代码包内 WebP 支持不稳，webp 仅用于网络图片）；新增或修改旅程后重跑 `export:mini` 即可同步。
-- 分包：主包（首页/关于/公共资源）+ 每旅程一个分包，首页 `preloadRule` 预加载。
+- 分包：主包（首页/关于/公共资源）+ 每旅程一个分包（`journeys/qinggan-loop`、`journeys/guangxi-hk`），首页 `preloadRule` 预加载。新增旅程时需在 `miniprogram/app.json` 注册分包，并从已有分包复制 `trip/route/poi/gallery/utils` 目录（页面全部由 `../data.js` 驱动）；节点分类筛选与图例按该旅程实际用到的 category 自动生成。
 - 信息架构（v0.2.0）：行程主页以「天」为索引的行程列表为核心（点击进入当天详情页），路线地图与路况、清单为页面中下部辅助区块；当天详情页含当日路线地图参考。
 - 差异说明：地图为微信原生 map（腾讯底图，GCJ-02 与数据一致）；Web 版实时驾车规划、卫星/路况图层小程序端不提供；来源链接改为复制到剪贴板。
 - 实拍打卡（云开发 + DeepSeek 视觉 API）：行程主页/POI 页「拍照」→ 定位匹配最近节点 → 云存储 → `cloudfunctions/analyze-photo` 云函数调用 `deepseek-v4-flash-vision-exp` 输出分类与一句话描述 → 节点实拍区展示。前置：开通云开发并在 `miniprogram/config.js` 填环境 ID、创建 `user_photos` 集合、部署云函数、配置 `DEEPSEEK_API_KEY` 环境变量、后台申请 getLocation 权限并更新隐私指引。
@@ -104,9 +109,9 @@ npm run mp:preview      # 终端预览二维码；npm run mp:upload -- -v 0.1.0 
 
 `travel-story/` 子目录整合了 [wang-bool/Travel-Story](https://github.com/wang-bool/Travel-Story)（MIT License）——按天规划行程、上传照片视频、让地图镜头与字幕沿时间线自动合成旅行影片的自部署工具，与主站双向互链：
 
-- 主站「青甘大环线」12 天行程已预置为该应用的内置行程，打开即可规划与成片；
+- 主站「青甘大环线」（12 天）与「国庆广西 · 香港之旅」（14 天）已预置为该应用的内置行程，打开即可规划与成片；
 - 种子数据由主站行程自动生成（唯一数据管道）：`npm run sync:travel-story`
-  把 `app/journeys/qinggan-loop/trip-data.ts` 同步为 `travel-story/lib/kejourney-seed.data.ts`；
+  把 `app/journeys/<slug>/trip-data.ts` 同步为 `travel-story/lib/kejourney-seed.data.ts`（导出 `KEJOURNEY_SEEDS` 数组；新增旅程时在脚本顶部的 `JOURNEYS` 里登记 slug 与行程元数据）；
 - 主站首页「Travel Story」卡片 ↔ 工具首页「KE 路书」双向入口；
 - 运行：`cd travel-story && npm install && cp .env.example .env.local && npm run dev`；
 - 集成说明与独立目录部署见 [travel-story/KEJOURNEY.md](travel-story/KEJOURNEY.md)。

@@ -170,10 +170,12 @@ location /api/ {
 
 ```bash
 curl -s https://ke-journey.bordy.cn/robots.txt | head        # 纯文本 robots
-curl -s https://ke-journey.bordy.cn/sitemap.xml | head       # XML，41 条 URL
+curl -s https://ke-journey.bordy.cn/sitemap.xml | head       # XML，94 条 URL（2 条旅程）
 curl -s -o /dev/null -w "%{http_code}" https://ke-journey.bordy.cn/nonexistent  # 404
 curl -s -o /dev/null -w "%{http_code} %{redirect_url}" https://ke-journey.bordy.cn/poi/mogao  # 301
 curl -s https://ke-journey.bordy.cn/qinggan-loop/ | grep -c 'type="image/webp"'  # ≥1
+curl -s https://ke-journey.bordy.cn/guangxi-hk/ | grep -c 'type="image/webp"'    # ≥1
+curl -s https://ke-journey.bordy.cn/guangxi-hk/poi/asiaworld-expo/ | grep -c 'detail-expo'  # ≥1
 curl -s -o /dev/null -w "%{http_code}" https://ke-journey.bordy.cn/detail/opt/qinghai.1080.webp  # 200
 ```
 

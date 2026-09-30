@@ -23,11 +23,14 @@ export default function FlightSearch({
   tripBase,
   tripName,
   terminalName,
+  isLoop = true,
 }: {
   tripBase: string;
   tripName: string;
   terminalName: string;
+  isLoop?: boolean;
 }) {
+  const backLabel = isLoop ? "返回环线地图" : "返回行程地图";
   // 静态导出环境无服务端 searchParams：从 window.location 懒初始化读取
   const [direction, setDirection] = useState<Direction>(() => {
     if (typeof window === "undefined") return "outbound";
@@ -80,7 +83,7 @@ export default function FlightSearch({
   return (
     <main className="travel-shell">
       <header className="travel-header">
-        <Link className="back-map" href={`${tripBase}/`}><span>←</span> 返回环线地图</Link>
+        <Link className="back-map" href={`${tripBase}/`}><span>←</span> {backLabel}</Link>
         <div className="travel-title-wrap">
           <small>FLIGHT DESK · 实时航班 · 数据来源：途牛</small>
           <h1>{tripName} · 航班查询</h1>

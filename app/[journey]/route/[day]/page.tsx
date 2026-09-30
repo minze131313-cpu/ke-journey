@@ -27,5 +27,5 @@ export default async function Page({ params }:{ params:Promise<{journey:string;d
   const journey = getJourney(slug);
   const detail = journey?.routeDetails[day];
   if (!journey || !detail) notFound();
-  return <RouteDetailPage detail={detail} tripBase={`/${slug}`} tripName={journey.title} places={journey.trip.places} days={journey.trip.days} />;
+  return <RouteDetailPage detail={detail} tripBase={`/${slug}`} tripName={journey.title} places={journey.trip.places} days={journey.trip.days} isLoop={Boolean(journey.config.terminalPlaceId)} />;
 }

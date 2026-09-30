@@ -2,11 +2,12 @@ import type { Place, PoiDetail, RouteDetail, TripDay } from "../journeys/types";
 import Link from "next/link";
 import DetailMediaCarousel from "./detail-media-carousel";
 
-const categoryCopy = {
+const categoryCopy: Record<Place["category"], { action:string; highlight:string; caution:string; className:string }> = {
   scenic: { action:"游览策略", highlight:"值得停留", caution:"现场边界", className:"scenic" },
   city: { action:"订房清单", highlight:"区域选择", caution:"入住核对", className:"city" },
   supply: { action:"补给动作", highlight:"节点价值", caution:"库存底线", className:"supply" },
   warning: { action:"避险动作", highlight:"识别信号", caution:"禁止事项", className:"warning" },
+  expo: { action:"逛展动作", highlight:"参展价值", caution:"现场纪律", className:"expo" },
 };
 
 function Sources({ items }:{ items:PoiDetail["sources"] }) {
@@ -21,9 +22,9 @@ function Sources({ items }:{ items:PoiDetail["sources"] }) {
   </section>;
 }
 
-function DetailHeader({ eyebrow,title,subtitle,icon,className,tripBase }:{ eyebrow:string;title:string;subtitle:string;icon:string;className:string;tripBase:string }) {
+function DetailHeader({ eyebrow,title,subtitle,icon,className,tripBase,backLabel }:{ eyebrow:string;title:string;subtitle:string;icon:string;className:string;tripBase:string;backLabel:string }) {
   return <header className={`detail-header ${className}`}>
-    <a className="back-map" href={`${tripBase}/`}><span>←</span> 返回环线地图</a>
+    <a className="back-map" href={`${tripBase}/`}><span>←</span> {backLabel}</a>
     <Link className="route-index" href="/">KE JOURNEY · 全部旅程</Link>
     <div className="detail-title-wrap">
       <span className="detail-type-icon">{icon}</span>
@@ -40,24 +41,26 @@ function DetailMobileNav({ day, tripBase }:{ day:number; tripBase:string }) {
   </nav>;
 }
 
-function DetailPager({ previous, next, progress }:{ previous?:{ href:string; eyebrow:string; title:string }; next?:{ href:string; eyebrow:string; title:string }; progress:string }) {
+function DetailPager({ previous, next, progress, endLabel }:{ previous?:{ href:string; eyebrow:string; title:string }; next?:{ href:string; eyebrow:string; title:string }; progress:string; endLabel:string }) {
   return <nav className="detail-pager" aria-label="按行程顺序切换详情页">
     <div className="pager-progress"><small>JOURNEY ORDER</small><b>{progress}</b></div>
     {previous ? <Link className="pager-card previous" href={previous.href}><small>← 上一段 · {previous.eyebrow}</small><b>{previous.title}</b></Link> : <span className="pager-card disabled"><small>← 上一段</small><b>已经是第一段</b></span>}
-    {next ? <Link className="pager-card next" href={next.href}><small>下一段 · {next.eyebrow} →</small><b>{next.title}</b></Link> : <span className="pager-card disabled next"><small>下一段 →</small><b>环线详情已结束</b></span>}
+    {next ? <Link className="pager-card next" href={next.href}><small>下一段 · {next.eyebrow} →</small><b>{next.title}</b></Link> : <span className="pager-card disabled next"><small>下一段 →</small><b>{endLabel}</b></span>}
   </nav>;
 }
 
-export function PoiDetailPage({ detail, tripBase, tripName, poiOrder, places, terminalPlaceId }:{ detail:PoiDetail; tripBase:string; tripName:string; poiOrder:readonly string[]; places:Place[]; terminalPlaceId?:string }) {
+export function PoiDetailPage({ detail, tripBase, tripName, poiOrder, places, flightPlaceId, isLoop = true }:{ detail:PoiDetail; tripBase:string; tripName:string; poiOrder:readonly string[]; places:Place[]; flightPlaceId?:string; isLoop?:boolean }) {
   const copy = categoryCopy[detail.place.category];
   const dayPlaces = places.filter((p)=>p.day===detail.place.day && p.id!==detail.place.id).slice(0,4);
   const orderIndex = poiOrder.indexOf(detail.place.id);
   const previousPlace = orderIndex > 0 ? places.find((place)=>place.id===poiOrder[orderIndex-1]) : undefined;
   const nextPlace = orderIndex >= 0 && orderIndex < poiOrder.length-1 ? places.find((place)=>place.id===poiOrder[orderIndex+1]) : undefined;
-  const isTerminal = terminalPlaceId !== undefined && detail.place.id === terminalPlaceId;
+  // 「从这里出发」的航班入口节点：环线是起终点，线性行程是行程起点。
+  const isTerminal = Boolean(flightPlaceId) && detail.place.id === flightPlaceId;
   const showStay = !isTerminal && detail.place.category !== "warning";
+  const backLabel = isLoop ? "返回环线地图" : "返回行程地图";
   return <main className={`detail-shell detail-${copy.className}`}>
-    <DetailHeader eyebrow={`${detail.kindLabel} · D${detail.place.day}`} title={detail.place.name} subtitle={`${detail.place.region} · ${detail.place.subtitle}`} icon={detail.icon} className={copy.className} tripBase={tripBase} />
+    <DetailHeader eyebrow={`${detail.kindLabel} · D${detail.place.day}`} title={detail.place.name} subtitle={`${detail.place.region} · ${detail.place.subtitle}`} icon={detail.icon} className={copy.className} tripBase={tripBase} backLabel={backLabel} />
     <div className="detail-content">
       <section className="hero-grid">
         <DetailMediaCarousel items={detail.gallery} title={detail.place.name} />
@@ -96,7 +99,7 @@ export function PoiDetailPage({ detail, tripBase, tripName, poiOrder, places, te
         <div className="story-main">
           <div className="detail-section-head"><span>01</span><div><small>PLACE / CONTEXT</small><h2>{detail.sections[0].title}</h2></div></div>
           <p>{detail.sections[0].text}</p>
-          <blockquote>“不是多加一个打卡点，而是让这个节点在整条环线中承担明确角色。”</blockquote>
+          <blockquote>{isLoop ? "“不是多加一个打卡点，而是让这个节点在整条环线中承担明确角色。”" : "“不是多加一个打卡点，而是让这个节点在整段行程中承担明确角色。”"}</blockquote>
         </div>
         <aside className="highlight-card">
           <small>WHY IT MATTERS</small><h3>{copy.highlight}</h3>
@@ -105,7 +108,7 @@ export function PoiDetailPage({ detail, tripBase, tripName, poiOrder, places, te
       </section>
 
       <section className="context-band">
-        <div className="detail-section-head light"><span>02</span><div><small>IN THE LOOP</small><h2>{detail.sections[1].title}</h2></div></div>
+        <div className="detail-section-head light"><span>02</span><div><small>{isLoop ? "IN THE LOOP" : "ON THE ROAD"}</small><h2>{detail.sections[1].title}</h2></div></div>
         <p>{detail.sections[1].text}</p>
         <div className="day-badge"><span>D{detail.place.day}</span><b>{detail.place.visit ?? "机动停留"}</b></div>
       </section>
@@ -135,20 +138,21 @@ export function PoiDetailPage({ detail, tripBase, tripName, poiOrder, places, te
       progress={`节点 ${String(orderIndex+1).padStart(2,"0")} / ${poiOrder.length}`}
       previous={previousPlace ? { href:`${tripBase}/poi/${previousPlace.id}`, eyebrow:`D${previousPlace.day}`, title:previousPlace.name } : undefined}
       next={nextPlace ? { href:`${tripBase}/poi/${nextPlace.id}`, eyebrow:`D${nextPlace.day}`, title:nextPlace.name } : undefined}
+      endLabel={isLoop ? "环线详情已结束" : "行程详情已结束"}
     />
     <footer className="detail-footer"><a href={`${tripBase}/`}>← 回到地图继续规划</a><span>{tripName}自驾地图 · KE Journey</span></footer>
     <DetailMobileNav day={detail.place.day} tripBase={tripBase} />
   </main>;
 }
 
-export function RouteDetailPage({ detail, tripBase, tripName, places, days }:{ detail:RouteDetail; tripBase:string; tripName:string; places:Place[]; days:TripDay[] }) {
+export function RouteDetailPage({ detail, tripBase, tripName, places, days, isLoop = true }:{ detail:RouteDetail; tripBase:string; tripName:string; places:Place[]; days:TripDay[]; isLoop?:boolean }) {
   const stops = detail.day.stops.map((id)=>places.find((p)=>p.id===id)).filter(Boolean);
   const previousDay = detail.day.day > 1 ? detail.day.day-1 : undefined;
-  const nextDay = detail.day.day < 12 ? detail.day.day+1 : undefined;
+  const nextDay = detail.day.day < days.length ? detail.day.day+1 : undefined;
   const previousRoute = previousDay ? days[previousDay-1] : undefined;
   const nextRoute = nextDay ? days[nextDay-1] : undefined;
   return <main className="detail-shell detail-route">
-    <DetailHeader eyebrow={`线路档案 · D${detail.day.day}`} title={detail.day.title} subtitle={`${detail.day.start} → ${detail.day.end} · ${detail.roads}`} icon={`D${detail.day.day}`} className="route" tripBase={tripBase} />
+    <DetailHeader eyebrow={`线路档案 · D${detail.day.day}`} title={detail.day.title} subtitle={`${detail.day.start} → ${detail.day.end} · ${detail.roads}`} icon={`D${detail.day.day}`} className="route" tripBase={tripBase} backLabel={isLoop ? "返回环线地图" : "返回行程地图"} />
     <div className="detail-content">
       <section className="hero-grid">
         <DetailMediaCarousel items={detail.gallery} title={`D${detail.day.day} ${detail.day.title}`} />
@@ -174,9 +178,10 @@ export function RouteDetailPage({ detail, tripBase, tripName, places, days }:{ d
       <Sources items={detail.sources} />
     </div>
     <DetailPager
-      progress={`线路 D${String(detail.day.day).padStart(2,"0")} / 12`}
+      progress={`线路 D${String(detail.day.day).padStart(2,"0")} / ${days.length}`}
       previous={previousRoute ? { href:`${tripBase}/route/${previousRoute.day}`, eyebrow:`D${previousRoute.day}`, title:previousRoute.title } : undefined}
       next={nextRoute ? { href:`${tripBase}/route/${nextRoute.day}`, eyebrow:`D${nextRoute.day}`, title:nextRoute.title } : undefined}
+      endLabel={isLoop ? "环线线路已结束" : "行程线路已结束"}
     />
     <footer className="detail-footer"><a href={`${tripBase}/`}>← 回到地图继续规划</a><span>D{detail.day.day} · {detail.day.start} → {detail.day.end}</span></footer>
     <DetailMobileNav day={detail.day.day} tripBase={tripBase} />

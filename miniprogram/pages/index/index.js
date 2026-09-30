@@ -64,8 +64,11 @@ Page({
     wx.navigateTo({ url: "/pages/about/about" });
   },
 
-  openGallery() {
-    wx.navigateTo({ url: "/journeys/qinggan-loop/gallery/gallery" });
+  openGallery(e) {
+    // 画廊按旅程分包存放；多旅程时由入口按钮携带 slug，缺省回退到第一条旅程。
+    const slug = (e && e.currentTarget && e.currentTarget.dataset.slug) || (journeys[0] && journeys[0].slug);
+    if (!slug) return;
+    wx.navigateTo({ url: `/journeys/${slug}/gallery/gallery` });
   },
 
   onShareAppMessage() {

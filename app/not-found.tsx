@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { journeys } from "./journeys/registry";
 
 export const metadata: Metadata = {
   title: { absolute: "页面不存在｜KE Journey" },
@@ -16,7 +17,9 @@ export default function NotFound() {
         <span>链接可能已失效，或这个页面已经随行程一起重新编排。</span>
         <div className="not-found-actions">
           <Link className="primary" href="/">回到旅程目录</Link>
-          <Link href="/qinggan-loop/">打开青甘大环线 →</Link>
+          {journeys.slice(0, 2).map((journey) => (
+            <Link key={journey.slug} href={`/${journey.slug}/`}>打开{journey.title} →</Link>
+          ))}
         </div>
       </div>
     </main>

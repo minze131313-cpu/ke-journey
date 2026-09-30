@@ -22,5 +22,5 @@ export default async function Page({ params }:{ params:Promise<{journey:string}>
   const journey = getJourney(slug);
   if (!journey) notFound();
   // 具体停留点与酒店/民宿类型由客户端按 URL 查询参数解析（静态导出环境无服务端 searchParams）
-  return <StaySearch tripBase={`/${slug}`} places={journey.trip.places} />;
+  return <StaySearch tripBase={`/${slug}`} places={journey.trip.places} isLoop={Boolean(journey.config.terminalPlaceId)} />;
 }

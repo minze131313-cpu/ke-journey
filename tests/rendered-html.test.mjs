@@ -24,6 +24,8 @@ test("renders the journey library homepage", async () => {
   assert.match(html, /KE JOURNEY/);
   assert.match(html, /旅程目录/);
   assert.match(html, /href="\/qinggan-loop\/"/);
+  assert.match(html, /href="\/guangxi-hk\/"/);
+  assert.match(html, /国庆广西 · 香港之旅/);
   assert.match(html, /og\.jpg/);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape/i);
 });
@@ -115,7 +117,57 @@ test("serves a complete XML sitemap for every journey page", async () => {
   const xml = await response.text();
   assert.match(xml, /https:\/\/ke-journey\.bordy\.cn\/qinggan-loop\/poi\/mogao/);
   assert.match(xml, /https:\/\/ke-journey\.bordy\.cn\/qinggan-loop\/route\/12/);
-  assert.equal((xml.match(/<loc>/g) ?? []).length, 41, "41 pages: home + loop + flights + stay + 12 routes + 25 places");
+  assert.match(xml, /https:\/\/ke-journey\.bordy\.cn\/guangxi-hk\/route\/14/);
+  assert.match(xml, /https:\/\/ke-journey\.bordy\.cn\/guangxi-hk\/poi\/asiaworld-expo/);
+  // 每条旅程贡献：旅程主页 + flights + stay + 每日线路 + 每个节点
+  assert.equal(
+    (xml.match(/<loc>/g) ?? []).length,
+    1 + (1 + 2 + 12 + 25) + (1 + 2 + 14 + 31),
+    "94 pages: home + 青甘大环线(1+2+12+25) + 国庆广西·香港之旅(1+2+14+31)",
+  );
+});
+
+test("renders the linear Guangxi–Hong Kong journey without loop wording", async () => {
+  const html = await htmlFor("/guangxi-hk");
+  assert.match(html, /国庆广西 · 香港之旅/);
+  assert.match(html, /北京 → 南宁 → 罗城 → 柳州 → 阳朔 → 深圳 ⇄ 香港/);
+  assert.match(html, /完整行程总览/);
+  assert.match(html, /行程方向/);
+  assert.doesNotMatch(html, /完整环线总览/);
+  assert.doesNotMatch(html, /环线方向/);
+});
+
+test("keeps the expo category, flight origin and 14-day pager on the new journey", async () => {
+  const expo = await htmlFor("/guangxi-hk/poi/asiaworld-expo");
+  assert.match(expo, /亚洲国际博览馆/);
+  assert.match(expo, /展会/);
+  assert.match(expo, /detail-expo/);
+  assert.match(expo, /返回行程地图/);
+  assert.doesNotMatch(expo, /环线详情已结束/);
+
+  // 线性行程的航班入口挂在行程起点，终点之外的其他节点仍显示住宿入口
+  const origin = await htmlFor("/guangxi-hk/poi/beijing");
+  assert.match(origin, /href="\/guangxi-hk\/flights\?direction=outbound"/);
+  assert.match(origin, /查询去程航班/);
+  assert.doesNotMatch(origin, /查询酒店/);
+  const middle = await htmlFor("/guangxi-hk/poi/xingping");
+  assert.match(middle, /href="\/guangxi-hk\/stay\?place=xingping&amp;type=hotel"/);
+  assert.doesNotMatch(middle, /查询去程航班/);
+
+  const last = await htmlFor("/guangxi-hk/route/14");
+  assert.match(last, /线路 D14 \/ 14/);
+  assert.doesNotMatch(last, /href="\/guangxi-hk\/route\/15"/);
+  assert.match(last, /行程线路已结束/);
+});
+
+test("renders the new journey travel service pages with itinerary wording", async () => {
+  const flights = await htmlFor("/guangxi-hk/flights");
+  assert.match(flights, /航班查询/);
+  assert.match(flights, /返回行程地图/);
+  const stay = await htmlFor("/guangxi-hk/stay");
+  assert.match(stay, /选择停留点/);
+  assert.match(stay, /返回行程地图/);
+  assert.doesNotMatch(stay, /返回环线地图/);
 });
 
 test("returns a branded Chinese 404 for unknown paths", async () => {
@@ -124,6 +176,7 @@ test("returns a branded Chinese 404 for unknown paths", async () => {
   const html = await response.text();
   assert.match(html, /这条路不在路书里/);
   assert.match(html, /href="\/qinggan-loop\/?"/);
+  assert.match(html, /href="\/guangxi-hk\/?"/);
   assert.doesNotMatch(html, /404: This page could not be found/);
 });
 

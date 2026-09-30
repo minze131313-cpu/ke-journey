@@ -15,7 +15,7 @@
 - [x] 小程序能力：分享（onShareAppMessage）、收藏、清单勾选持久化、`wx.openLocation` 导航、来源链接复制、关于/免责/隐私页。
 - [x] 实拍打卡（v0.3.0，云开发 + DeepSeek 视觉 API）：拍照 → getLocation 定位 → 匹配最近节点（10km 阈值）→ 云存储 → 云函数 `cloudfunctions/analyze-photo`（`deepseek-v4-flash-vision-exp` 输出分类 scenic/city/supply/warning + 结合时间地点内容的一句话描述）→ 云数据库 `user_photos`；行程主页「实拍足迹」区块与 POI 页「我的实拍」区展示，长按删除（记录+云文件）。未配置环境 ID 时优雅降级。
   - 用户手动项：开通云开发环境（填 `miniprogram/config.js`）→ 创建 `user_photos` 集合（仅创建者可读写）→ 云函数环境变量 `DEEPSEEK_API_KEY` → 右键部署云函数（云端安装依赖）→ 后台申请 getLocation 接口权限 → 更新隐私保护指引（位置/摄像头/图片上传）。
-- [x] 分包：主包（首页/关于/模板/公共资源）+ `journeys/qinggan-loop` 分包，`preloadRule` 预加载。
+- [x] 分包：主包（首页/关于/模板/公共资源）+ 每旅程一个分包（`journeys/qinggan-loop`、`journeys/guangxi-hk`），`preloadRule` 预加载。
 - [x] E2E `tests/mini-e2e.mjs`：直连 IDE 自动化 WebSocket 协议（不依赖 miniprogram-automator，其与新版 IDE 协议不兼容），全页面走查 + 运行时错误收集，全部通过（`npm run e2e:mini`）。
 - [ ] 待办（用户手动，进行中）：小程序平台权限与隐私申请审核（getLocation 接口权限、用户隐私保护指引、ICP 备案）→ 确认云函数环境变量与超时 10s → 设体验版 → 真机拍照验证 → 提审 → 发布。代码与云端均就绪（v0.3.1 + cloudbase 环境修复版云函数），恢复时从体验版设置开始。
 

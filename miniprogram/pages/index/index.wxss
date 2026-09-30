@@ -23,6 +23,16 @@
   color: var(--teal);
 }
 
+.card-actions {
+  display: flex;
+  gap: 16rpx;
+}
+
+.card-actions .card-cta {
+  flex: 1;
+  margin-top: 0;
+}
+
 .card-cta {
   margin-top: 32rpx;
 }

@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   title: { default:"KE Journey｜可以出发的旅行路书", template:"%s｜KE Journey" },
   description:"自驾旅行路线、交互地图、逐日行程、住宿补给与风险提示。",
   manifest:"/manifest.webmanifest",
-  openGraph:{ siteName:"KE Journey", locale:"zh_CN", type:"website", images:[{ url:"/og.jpg", alt:"KE Journey 青甘大环线旅行路书" }] },
+  openGraph:{ siteName:"KE Journey", locale:"zh_CN", type:"website", images:[{ url:"/og.jpg", alt:"KE Journey 自驾旅行路书" }] },
 };
 
 // viewport-fit=cover：让 iOS 刘海屏/Home 指示条下 env(safe-area-inset-*) 真正生效
