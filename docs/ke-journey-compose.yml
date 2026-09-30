@@ -1,0 +1,55 @@
+# ============================================================
+# 主站静态发布（Hostinger API · 方式 A）
+#
+# 用法见 docs/DEPLOYMENT.md「发布方式 A」章节：
+#   POST /api/vps/v1/virtual-machines/{vpsId}/docker
+#   {project_name: "contentful-demo", content: <本文件内容>}
+# 日志出现 STATIC_RELEASE_READY_<ts> 即发布完成。
+#
+# 链路：浅克隆 GitHub main → npm ci → npx next build（静态导出）
+#       → /site/releases/<ts>/ → 切换 /site/current 软链
+#
+# 硬规则（踩过的坑）：
+#   1. working_dir 固定为 /：本命令会 rm -rf /src/repo，
+#      若工作目录在被删目录内，容器会起不来。
+#   2. compose 内容里的 $ 必须写成 $$，否则会被 Docker Compose 当变量插值成空。
+#   3. 仓库自带的 next.config.ts 与静态导出配置冲突：删掉它，改用 next.config.mjs。
+#   4. /opt/ke-journey-src 每次发布重建，不要往里放持久化数据。
+#   5. next build 默认会跑 TS 类型检查，但仓库里存在与本功能无关的历史类型错误
+#      （app/lib/travel-api.ts、vite.config.ts），因此沿用历史上线时相同的
+#      typescript.ignoreBuildErrors + eslint.ignoreDuringBuilds（日志显示
+#      "Skipping validation of types"）。类型问题另行单独修，不要卡发布。
+# ============================================================
+
+services:
+  static-release:
+    image: node:22-alpine
+    container_name: ke-journey-static-release
+    working_dir: /
+    volumes:
+      - /opt/contentful-demo:/app            # 提供 .env.local（高德 Key 等构建期变量）
+      - /var/www/ke-journey.bordy.cn:/site   # releases/ 与 current 软链
+      - /opt/ke-journey-src:/src             # 每次发布重建的构建目录
+    command:
+      - sh
+      - -lc
+      - |-
+        set -eu
+        cd /
+        TS=$$(date +%Y%m%d%H%M%S)
+        apk add --no-cache git >/dev/null
+        rm -rf /src/repo
+        git clone --depth 1 https://github.com/minze131313-cpu/ke-journey.git /src/repo
+        cp /app/.env.local /src/repo/.env.local
+        rm -f /src/repo/next.config.ts
+        printf '%s\n' 'const nextConfig = { output: "export", trailingSlash: true, images: { unoptimized: true }, eslint: { ignoreDuringBuilds: true }, typescript: { ignoreBuildErrors: true } };' 'export default nextConfig;' > /src/repo/next.config.mjs
+        cd /src/repo
+        git rev-parse HEAD
+        npm ci --no-audit --no-fund
+        npx next build
+        test -f out/index.html
+        mkdir -p /site/releases/$$TS
+        cp -a out/. /site/releases/$$TS/
+        ln -sfn releases/$$TS /site/current
+        ls /site/current/index.html >/dev/null
+        echo STATIC_RELEASE_READY_$$TS

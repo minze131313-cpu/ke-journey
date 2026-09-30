@@ -123,7 +123,7 @@ test("serves a complete XML sitemap for every journey page", async () => {
   assert.equal(
     (xml.match(/<loc>/g) ?? []).length,
     1 + (1 + 2 + 12 + 25) + (1 + 2 + 14 + 31),
-    "94 pages: home + 青甘大环线(1+2+12+25) + 国庆广西·香港之旅(1+2+14+31)",
+    "89 pages: home + 青甘大环线(1+2+12+25) + 国庆广西·香港之旅(1+2+14+31)",
   );
 });
 

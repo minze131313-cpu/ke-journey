@@ -103,7 +103,7 @@ type ProxyResponse = {
   [key: string]: unknown;
 };
 
-async function callProxy(type: string, params: Record<string, unknown>): Promise<ProxyResponse["data"]> {
+async function callProxy(type: string, params: Record<string, unknown>): Promise<ProxyResponse["data"] | null> {
   let response: Response;
   try {
     response = await fetch("/api/", {

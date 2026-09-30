@@ -43,17 +43,20 @@ nginx (host, 1.24.0) → /var/www/ke-journey.bordy.cn/current
 2. 轮询 `GET .../docker/contentful-demo/logs` 直到出现 `STATIC_RELEASE_READY_<ts>`。
 3. 上线验证（见下文清单）。
 
-发布命令模板（Python）：
+**compose 已入库：[`docs/ke-journey-compose.yml`](ke-journey-compose.yml)**，用仓库自带助手发布：
 
-```python
-payload = {"project_name": "contentful-demo", "content": COMPOSE_YAML}
-# COMPOSE_YAML 要点：
-#   image: node:22-alpine, working_dir 固定 /src
-#   git clone --depth 1 https://github.com/minze131313-cpu/ke-journey.git /src/repo
-#   cp /app/.env.local /src/repo/.env.local
-#   写入 next.config.mjs（output:"export", trailingSlash:true, images.unoptimized）
-#   npm ci && npx next build && cp -a out/. /site/releases/<ts>/ && ln -sfn releases/<ts> /site/current
+```bash
+HOSTINGER_TOKEN=$(cat ~/.hostinger_token) \
+  node scripts/hostinger-docker.mjs deploy contentful-demo docs/ke-journey-compose.yml STATIC_RELEASE_READY 900
 ```
+
+> 坑：`contentful-demo` 项目会**保留历史日志**，日志轮询若只匹配 `STATIC_RELEASE_READY`
+> 前缀，会命中上一次发布的旧 marker 而误判成功。传入带日期的 marker
+> （如 `STATIC_RELEASE_READY_20260930`）或核对 `git rev-parse HEAD` 输出的 commit 是否为本次要发布的提交。
+>
+> `next build` 默认会跑 TS 类型检查；仓库历史上有与本功能无关的类型错误，
+> 因此 compose 里沿用历史上线时的 `typescript.ignoreBuildErrors` + `eslint.ignoreDuringBuilds`
+> （日志表现为 `Skipping validation of types`）。
 
 ### 方式 B：Codex 网页发布（用户手动）
 
@@ -170,14 +173,18 @@ location /api/ {
 
 ```bash
 curl -s https://ke-journey.bordy.cn/robots.txt | head        # 纯文本 robots
-curl -s https://ke-journey.bordy.cn/sitemap.xml | head       # XML，94 条 URL（2 条旅程）
+curl -s https://ke-journey.bordy.cn/sitemap.xml | grep -c '<loc>'  # 89 条 URL（2 条旅程）
 curl -s -o /dev/null -w "%{http_code}" https://ke-journey.bordy.cn/nonexistent  # 404
 curl -s -o /dev/null -w "%{http_code} %{redirect_url}" https://ke-journey.bordy.cn/poi/mogao  # 301
-curl -s https://ke-journey.bordy.cn/qinggan-loop/ | grep -c 'type="image/webp"'  # ≥1
-curl -s https://ke-journey.bordy.cn/guangxi-hk/ | grep -c 'type="image/webp"'    # ≥1
-curl -s https://ke-journey.bordy.cn/guangxi-hk/poi/asiaworld-expo/ | grep -c 'detail-expo'  # ≥1
+curl -s https://ke-journey.bordy.cn/ | grep -c '国庆广西'          # ≥1（首页新旅程卡片）
+curl -s https://ke-journey.bordy.cn/qinggan-loop/ | grep -c '高德交互地图'  # ≥1（既有旅程未回归）
+curl -s https://ke-journey.bordy.cn/guangxi-hk/ | grep -c '完整行程总览'    # ≥1（线性行程文案）
+curl -s https://ke-journey.bordy.cn/guangxi-hk/poi/asiaworld-expo/ | grep -c 'detail-expo'  # ≥1（展会分类样式）
 curl -s -o /dev/null -w "%{http_code}" https://ke-journey.bordy.cn/detail/opt/qinghai.1080.webp  # 200
 ```
+
+> 注意：`/guangxi-hk/` 是地图页，页面本身**没有 `<img>`**（底图与图钉由高德 Canvas 渲染），
+> 因此不能拿它检查 `type="image/webp"`；WebP `<picture>` 只出现在首页卡片与图文详情页。
 
 ## 凭证与安全
 
