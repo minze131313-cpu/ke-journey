@@ -111,14 +111,36 @@ location ~* \.(?:css|js|jpg|jpeg|png|gif|webp|svg|ico|woff2?)$ {
 
 ```nginx
 location /api/ {
-    proxy_pass https://1439498936-460a7b6oqn.ap-guangzhou.tencentscf.com/;
+    # CORS 预检必须放在 rewrite ... break 之前，否则会被 break 跳过
+    if ($request_method = OPTIONS) {
+        return 204;
+    }
+    # 运行时解析上游域名（2026-09-30 加固，见「故障处置」）
+    resolver 1.1.1.1 8.8.8.8 223.5.5.5 valid=30s ipv6=off;
+    set $rollinggo https://1439498936-460a7b6oqn.ap-guangzhou.tencentscf.com;
+    rewrite ^/api/(.*)$ /$1 break;                  # 复现原 proxy_pass 尾斜杠的前缀替换
+    proxy_pass $rollinggo;
     proxy_ssl_server_name on;
+    proxy_ssl_name 1439498936-460a7b6oqn.ap-guangzhou.tencentscf.com;
     proxy_set_header Host 1439498936-460a7b6oqn.ap-guangzhou.tencentscf.com;
     proxy_set_header X-Proxy-Token tp_8k2mX9vQ4z;   # 上游代理 token，仅存于 VPS nginx 配置
     proxy_set_header Content-Type application/json;
-    if ($request_method = OPTIONS) { return 204; }
+    add_header Access-Control-Allow-Origin "https://ke-journey.bordy.cn" always;
+    add_header Access-Control-Allow-Methods "GET, POST, OPTIONS" always;
+    add_header Access-Control-Allow-Headers "Content-Type" always;
 }
 ```
+
+> **为什么用变量 `proxy_pass`**：nginx 在**配置加载期**解析 `proxy_pass` 里的字面域名，
+> 解析失败会导致 `nginx -t` 不通过、**整个 nginx 起不来（全站宕机）**。
+> 改成 `set` + 变量后域名在**请求时**解析，DNS 抖动最多让 `/api/` 返回 502，主站不受影响。
+>
+> 两点必须注意：
+> 1. 变量形式的 `proxy_pass` **不会**做「location 前缀 → /」的替换，必须自己 `rewrite ... break` 补回；
+> 2. `rewrite ... break` 会中断后续 rewrite 阶段指令，所以 CORS 预检的 `if` 必须挪到它前面。
+>
+> 解析器实测：宿主 `127.0.0.53`（systemd-resolved stub）对上游域名**解析不出来**，
+> 用公网解析器（1.1.1.1 / 8.8.8.8 / 223.5.5.5）正常，故写三个做冗余。
 
 - 浏览器只访问同源 `/api/`，上游 token 不出现在前端代码与仓库中。
 - 本地开发由 vite `server.proxy` 承担，token 从 `.env.local` 的
@@ -128,6 +150,8 @@ location /api/ {
   （上游自 2026-07-27 起暂停升级，返回 SERVICE_UNAVAILABLE，恢复后无需改动）。
 - 若上游代理地址/token 变更，同时更新：VPS nginx 配置、本地 `.env.local`、
   `app/lib/travel-api.ts` 注释与本文档。
+- 改动该文件的实操脚本见 [`docs/nginx-api-resolver-compose.yml`](nginx-api-resolver-compose.yml)
+  （备份 → base64 传入新块 → Python 括号配平替换 → `nginx -t` → reload，失败自动回滚）。
 
 ## Travel Story 独立部署（原域名 /travel-story/ 目录）
 
@@ -249,21 +273,22 @@ done
 > 插值成空字符串，`$$NS systemctl ...` 会退化成在容器里跑 `systemctl` → `not found`，
 > 看起来像"宿主机没有 systemctl"，实际是变量被吃掉了（本项目已踩过一次）。
 
-### 尚未修掉的隐患（建议尽快处理）
+### 根因已修复（2026-09-30）
 
-`ke-journey.bordy.cn.conf` 的 `/api/` 块在**配置加载期**解析外部域名，
-DNS 一抖动 nginx 就起不来。彻底修法是改成**运行时解析**：
+`ke-journey.bordy.cn.conf` 的 `/api/` 块原本在**配置加载期**解析外部域名，
+DNS 一抖动 nginx 就起不来。**已改为运行时解析**（改法与本文件上方的 nginx 片段一致）：
 
-```nginx
-location /api/ {
-    resolver 127.0.0.53 valid=30s;          # 用宿主 systemd-resolved
-    set $rollinggo https://1439498936-460a7b6oqn.ap-guangzhou.tencentscf.com;
-    proxy_pass $rollinggo;                   # 变量形式 → 请求时才解析
-    ...
-}
-```
+| 项 | 值 |
+|---|---|
+| 备份 | `/etc/nginx/sites-available/ke-journey.bordy.cn.conf.bak-20260930-073813` |
+| 解析器 | `1.1.1.1 8.8.8.8 223.5.5.5 valid=30s ipv6=off`（实测 `127.0.0.53` 解析不出该域名） |
+| 落地方式 | `docs/nginx-api-resolver-compose.yml` + `docs/nginx-resolver-redundant-compose.yml` |
+| 验证 | `nginx -t` 通过；`POST /api/` 200 且返回内容与直连上游一致；`OPTIONS /api/` 204；全站 200 |
 
-**改动该文件需要用户明确同意**（内含业务 token，且是主站唯一入口）。
+**现在的故障隔离**：即使上游域名解析失败，也只是 `/api/` 返回 502，
+主站（静态页、`/travel-story`、`/api/flight/`）不受影响，nginx 也不会启动失败。
+
+回滚（如需）：把备份 `cp` 回原路径 → `nginx -t` → `nginx -s reload`。
 
 ## 凭证与安全
 

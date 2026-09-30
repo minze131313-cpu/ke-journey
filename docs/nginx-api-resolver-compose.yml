@@ -1,0 +1,83 @@
+# nginx 加固：/api/ 上游改为「运行时解析」，避免 DNS 抖动导致 nginx 起不来（全站宕机）
+# 用法：node scripts/hostinger-docker.mjs deploy kej-nginxfix docs/nginx-api-resolver-compose.yml NGINX_FIX_DONE 300
+#
+# 行为等价性：原配置 proxy_pass https://host/ 会把 location 前缀 /api/ 换成 /；
+# 新配置用 rewrite ^/api/(.*)$ /$1 break; + 变量 proxy_pass 复现同一语义；
+# CORS 预检 if 提到 rewrite 之前，否则会被 rewrite ... break 跳过。
+services:
+  nginxfix:
+    image: alpine:3.20
+    container_name: kej-nginxfix
+    pid: host
+    privileged: true
+    cap_add:
+      - SYS_ADMIN
+      - SYS_PTRACE
+    volumes:
+      - /:/host
+    command:
+      - sh
+      - -lc
+      - |-
+        set -u
+        apk add --no-cache util-linux bind-tools python3 >/dev/null 2>&1 || true
+        NS="nsenter --target 1 --mount --uts --ipc --net --pid --"
+        CONF=/host/etc/nginx/sites-available/ke-journey.bordy.cn.conf
+        UP=1439498936-460a7b6oqn.ap-guangzhou.tencentscf.com
+        echo "=====TOOLS====="
+        command -v dig || echo NO_DIG
+        command -v python3 || echo NO_PYTHON3
+        echo "=====DNS_PRECHECK====="
+        RESOLVER=""
+        for R in 127.0.0.53 1.1.1.1 8.8.8.8 223.5.5.5; do
+          IP=$$(dig +short +time=3 +tries=1 @$$R $$UP 2>/dev/null | grep -E '^[0-9]+\.' | head -1)
+          echo "  resolver $$R -> $${IP:-none}"
+          if [ -n "$$IP" ] && [ -z "$$RESOLVER" ]; then RESOLVER=$$R; fi
+        done
+        if [ -z "$$RESOLVER" ]; then echo NO_USABLE_RESOLVER; exit 1; fi
+        echo "  chosen: $$RESOLVER"
+        echo "=====BACKUP====="
+        BAK="$$CONF.bak-$$(date +%Y%m%d-%H%M%S)"
+        cp "$$CONF" "$$BAK" && echo "  backup -> $$BAK"
+        echo "=====SPLICE====="
+        printf '%s' 'bG9jYXRpb24gL2FwaS8gewogICAgIyBDT1JTIOmihOajgOW/hemhu+aUvuWcqCByZXdyaXRlIC4uLiBicmVhayDkuYvliY3vvIzlkKbliJnkvJrooqsgYnJlYWsg6Lez6L+HCiAgICBpZiAoJHJlcXVlc3RfbWV0aG9kID0gT1BUSU9OUykgewogICAgICAgIHJldHVybiAyMDQ7CiAgICB9CiAgICAjIOi/kOihjOaXtuino+aekOS4iua4uOWfn+WQje+8mumBv+WFjSBETlMg5oqW5Yqo5a+86Ie06YWN572u5Yqg6L295aSx6LSl44CB5pW056uZ6LW35LiN5p2lCiAgICAjIO+8iDIwMjYtMDktMzAgMDY6NDcg5pu+5Zug6YWN572u5pyf6Kej5p6QIGhvc3Qgbm90IGZvdW5kIOWvvOiHtCBuZ2lueCDml6Dms5XlkK/liqjvvIkKICAgIHJlc29sdmVyIF9fUkVTT0xWRVJfXyB2YWxpZD0zMHMgaXB2Nj1vZmY7CiAgICBzZXQgJHJvbGxpbmdnbyBodHRwczovLzE0Mzk0OTg5MzYtNDYwYTdiNm9xbi5hcC1ndWFuZ3pob3UudGVuY2VudHNjZi5jb207CiAgICByZXdyaXRlIF4vYXBpLyguKikkIC8kMSBicmVhazsKICAgIHByb3h5X3Bhc3MgJHJvbGxpbmdnbzsKICAgIHByb3h5X3NzbF9zZXJ2ZXJfbmFtZSBvbjsKICAgIHByb3h5X3NzbF9uYW1lIDE0Mzk0OTg5MzYtNDYwYTdiNm9xbi5hcC1ndWFuZ3pob3UudGVuY2VudHNjZi5jb207CiAgICBwcm94eV9zZXRfaGVhZGVyIEhvc3QgMTQzOTQ5ODkzNi00NjBhN2I2b3FuLmFwLWd1YW5nemhvdS50ZW5jZW50c2NmLmNvbTsKICAgIHByb3h5X3NldF9oZWFkZXIgWC1Qcm94eS1Ub2tlbiB0cF84azJtWDl2UTR6OwogICAgcHJveHlfc2V0X2hlYWRlciBDb250ZW50LVR5cGUgYXBwbGljYXRpb24vanNvbjsKICAgIGFkZF9oZWFkZXIgQWNjZXNzLUNvbnRyb2wtQWxsb3ctT3JpZ2luICJodHRwczovL2tlLWpvdXJuZXkuYm9yZHkuY24iIGFsd2F5czsKICAgIGFkZF9oZWFkZXIgQWNjZXNzLUNvbnRyb2wtQWxsb3ctTWV0aG9kcyAiR0VULCBQT1NULCBPUFRJT05TIiBhbHdheXM7CiAgICBhZGRfaGVhZGVyIEFjY2Vzcy1Db250cm9sLUFsbG93LUhlYWRlcnMgIkNvbnRlbnQtVHlwZSIgYWx3YXlzOwp9Cg==' | base64 -d > /tmp/newblock.txt
+        sed "s/__RESOLVER__/$$RESOLVER/" /tmp/newblock.txt > /tmp/block.txt
+        sed -n '1,3p' /tmp/block.txt
+        python3 - <<'PY' || exit 1
+        conf = "/host/etc/nginx/sites-available/ke-journey.bordy.cn.conf"
+        block = open("/tmp/block.txt").read().rstrip("\n")
+        src = open(conf).read()
+        start = src.index("location /api/ {")
+        i = src.index("{", start)
+        depth = 0
+        j = i
+        while True:
+            if src[j] == "{":
+                depth += 1
+            elif src[j] == "}":
+                depth -= 1
+                if depth == 0:
+                    break
+            j += 1
+        end = j + 1
+        open(conf, "w").write(src[:start] + block + src[end:])
+        print("  SPLICED_OK")
+        PY
+        echo "=====VERIFY_SPLICE====="
+        grep -c "resolver " "$$CONF" || true
+        grep -n "proxy_pass" "$$CONF" | head -6
+        echo "=====NGINX_TEST====="
+        if $$NS nginx -t 2>&1; then
+          echo TEST_OK
+          $$NS nginx -s reload 2>&1 && echo RELOADED
+        else
+          echo TEST_FAILED_ROLLBACK
+          cp "$$BAK" "$$CONF"
+          $$NS nginx -t 2>&1 && $$NS nginx -s reload 2>&1
+          echo ROLLED_BACK
+        fi
+        sleep 2
+        echo "=====SELFTEST====="
+        $$NS curl -s -o /dev/null -w '  local /api/ POST: %{http_code}\n' -X POST -H 'Content-Type: application/json' -H 'Host: ke-journey.bordy.cn' -d '{"type":"hotel_search_tags","params":{}}' http://127.0.0.1/api/ || true
+        $$NS curl -s -o /dev/null -w '  local guangxi-hk: %{http_code}\n' -H 'Host: ke-journey.bordy.cn' http://127.0.0.1/guangxi-hk/ || true
+        echo NGINX_FIX_DONE

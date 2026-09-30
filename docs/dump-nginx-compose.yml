@@ -1,0 +1,22 @@
+# 只读：导出 ke-journey.bordy.cn nginx 配置原文（含行号）
+# 用法：node scripts/hostinger-docker.mjs deploy kej-cfg docs/dump-nginx-compose.yml DUMP_DONE 240
+services:
+  dump:
+    image: alpine:3.20
+    container_name: kej-cfg
+    volumes:
+      - /:/host:ro
+    command:
+      - sh
+      - -lc
+      - |-
+        echo "=====CONF_START====="
+        cat -n /host/etc/nginx/sites-available/ke-journey.bordy.cn.conf
+        echo "=====CONF_END====="
+        echo "=====RESOLVER_CTX====="
+        grep -nE 'resolver|^http|include' /host/etc/nginx/nginx.conf | head -20
+        echo "=====RESOLV_CONF====="
+        head -5 /host/etc/resolv.conf 2>/dev/null || true
+        echo "=====BACKUPS====="
+        ls -la /host/etc/nginx/sites-available/ | grep ke-journey || true
+        echo "DUMP_DONE"
