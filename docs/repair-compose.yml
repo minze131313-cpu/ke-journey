@@ -1,0 +1,42 @@
+# nginx 抢修：确认 nginx 现状 → 拉起来 → 本地自测
+# 用法：node scripts/hostinger-docker.mjs deploy kej-repair docs/repair-compose.yml REPAIR_DONE 300
+services:
+  repair:
+    image: alpine:3.20
+    container_name: kej-repair
+    pid: host
+    privileged: true
+    cap_add:
+      - SYS_ADMIN
+      - SYS_PTRACE
+    volumes:
+      - /:/host
+    command:
+      - sh
+      - -lc
+      - |-
+        apk add --no-cache util-linux >/dev/null 2>&1 || true
+        NS="nsenter --target 1 --mount --uts --ipc --net --pid --"
+        echo "=====NSENTER====="
+        command -v nsenter || echo NO_NSENTER
+        echo "=====NGINX_PROC====="
+        $$NS pgrep -a nginx || echo NO_NGINX_PROCESS
+        echo "=====LISTEN_BEFORE====="
+        $$NS ss -lntp 2>&1 | head -20 || echo SS_FAILED
+        echo "=====NGINX_BIN====="
+        ls -la /host/usr/sbin/nginx 2>&1 || echo NO_NGINX_BIN
+        echo "=====SYSTEMD_UNIT====="
+        ls -la /host/lib/systemd/system/nginx.service /host/etc/systemd/system/nginx.service 2>&1 || true
+        echo "=====SITES_ENABLED====="
+        ls -la /host/etc/nginx/sites-enabled/ 2>&1 | head -15 || true
+        echo "=====NGINX_TEST====="
+        $$NS nginx -t 2>&1 || true
+        echo "=====START_ATTEMPT====="
+        $$NS systemctl start nginx 2>&1 || echo SYSTEMCTL_START_FAILED
+        sleep 4
+        echo "=====LISTEN_AFTER====="
+        $$NS ss -lntp 2>&1 | head -20 || echo SS_FAILED
+        echo "=====SELFTEST====="
+        $$NS curl -s -o /dev/null -w 'local root: %{http_code}\n' http://127.0.0.1/ || true
+        $$NS curl -s -o /dev/null -w 'local guangxi-hk: %{http_code}\n' -H 'Host: ke-journey.bordy.cn' http://127.0.0.1/guangxi-hk/ || true
+        echo REPAIR_DONE

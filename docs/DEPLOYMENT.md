@@ -186,10 +186,90 @@ curl -s -o /dev/null -w "%{http_code}" https://ke-journey.bordy.cn/detail/opt/qi
 > 注意：`/guangxi-hk/` 是地图页，页面本身**没有 `<img>`**（底图与图钉由高德 Canvas 渲染），
 > 因此不能拿它检查 `type="image/webp"`；WebP `<picture>` 只出现在首页卡片与图文详情页。
 
+## 故障处置：全站打不开（nginx 未运行）
+
+**2026-09-30 实际发生过一次**，处置流程已固化为两个一次性容器。
+
+### 症状与判定
+
+浏览器 `ERR_CONNECTION_RESET`，`bordy.cn` 与 `ke-journey.bordy.cn` **同时**打不开，
+但 `ping 187.77.25.70` 通、22 端口通 → **不是网络问题，是服务器上的 nginx 停了**：
+
+```bash
+nc -z -G 6 187.77.25.70 80    # 不通
+nc -z -G 6 187.77.25.70 443   # 不通
+nc -z -G 6 187.77.25.70 22    # 通 —— 机器活着
+```
+
+注意 3001（Travel Story）与 8787（途牛桥接）**本来就不对外**（监听 127.0.0.1），
+它们不通不代表异常。
+
+### 本次根因（journalctl）
+
+```
+nginx[200460]: [emerg] host not found in upstream
+  "1439498936-460a7b6oqn.ap-guangzhou.tencentscf.com" in
+  /etc/nginx/sites-enabled/ke-journey.bordy.cn.conf:25
+systemd[1]: nginx.service: Failed with result 'exit-code'.
+```
+
+`/api/` 那段 `proxy_pass` 用的是**外部域名**，nginx 在**加载配置时**就要解析它。
+06:47:49 那次（重）启动赶上 DNS 抖动 → `nginx -t` 失败 → 服务起不来 → 全站 500/连接重置。
+机器本身没问题：uptime 29 天、磁盘 9%、无 OOM、`nginx.service` 本来就是 `enabled`。
+
+### 处置步骤
+
+```bash
+cd <repo>
+# 1) 只读探针：nginx 进程 / 监听 / 磁盘 / 内存 / 当前 release
+HOSTINGER_TOKEN=$(cat ~/.hostinger_token) \
+  node scripts/hostinger-docker.mjs deploy kej-probe docs/probe-compose.yml PROBE_DONE 300
+HOSTINGER_TOKEN=$(cat ~/.hostinger_token) \
+  node scripts/hostinger-docker.mjs logs kej-probe 80
+
+# 2) 抢修：nsenter 进宿主 → nginx -t → systemctl start nginx → 本地自测
+HOSTINGER_TOKEN=$(cat ~/.hostinger_token) \
+  node scripts/hostinger-docker.mjs deploy kej-repair docs/repair-compose.yml REPAIR_DONE 300
+HOSTINGER_TOKEN=$(cat ~/.hostinger_token) \
+  node scripts/hostinger-docker.mjs logs kej-repair 60
+
+# 3) 用完注销（异步，约 10 秒后从列表消失）
+for p in kej-probe kej-repair; do
+  curl -s -X DELETE -H "Authorization: Bearer $(cat ~/.hostinger_token)" \
+    "https://developers.hostinger.com/api/vps/v1/virtual-machines/1369858/docker/$p/down"
+done
+
+# 4) 外部复测
+for p in / /guangxi-hk/ /qinggan-loop/ /sitemap.xml; do
+  curl -s -o /dev/null -w "$p %{http_code}\n" "https://ke-journey.bordy.cn$p"
+done
+```
+
+> 两个 compose 里所有 shell 变量都写成 `$$VAR`：写成 `$VAR` 会被 Docker Compose
+> 插值成空字符串，`$$NS systemctl ...` 会退化成在容器里跑 `systemctl` → `not found`，
+> 看起来像"宿主机没有 systemctl"，实际是变量被吃掉了（本项目已踩过一次）。
+
+### 尚未修掉的隐患（建议尽快处理）
+
+`ke-journey.bordy.cn.conf` 的 `/api/` 块在**配置加载期**解析外部域名，
+DNS 一抖动 nginx 就起不来。彻底修法是改成**运行时解析**：
+
+```nginx
+location /api/ {
+    resolver 127.0.0.53 valid=30s;          # 用宿主 systemd-resolved
+    set $rollinggo https://1439498936-460a7b6oqn.ap-guangzhou.tencentscf.com;
+    proxy_pass $rollinggo;                   # 变量形式 → 请求时才解析
+    ...
+}
+```
+
+**改动该文件需要用户明确同意**（内含业务 token，且是主站唯一入口）。
+
 ## 凭证与安全
 
 - 高德 Key 与安全密钥：VPS `/opt/contentful-demo/.env.local`（构建时注入）、
   本地 `.env.local`、Codex 环境变量，三处需保持一致。
 - Hostinger API Token 具备 VPS 管理权限，泄露后立即在
   hPanel → Profile → API 重置。
-- VPS 的 SSH 目前实测不可用（22 端口握手即断），日常维护走 API 或 hPanel。
+- SSH：22 端口 TCP 可连，但本机未授权密钥（`Permission denied (publickey,password)`），
+  日常维护走 API + 一次性容器（见上）；2026-08-31 曾短暂可用过。

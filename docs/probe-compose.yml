@@ -1,0 +1,42 @@
+# 只读诊断：查 nginx 为何不在监听（不改动任何东西）
+# 用法：node scripts/hostinger-docker.mjs deploy kej-probe docs/probe-compose.yml PROBE_DONE 300
+services:
+  probe:
+    image: alpine:3.20
+    container_name: kej-probe
+    pid: host
+    privileged: true
+    cap_add:
+      - SYS_ADMIN
+      - SYS_PTRACE
+    volumes:
+      - /:/host
+    command:
+      - sh
+      - -lc
+      - |-
+        apk add --no-cache util-linux >/dev/null 2>&1 || true
+        NS="nsenter --target 1 --mount --uts --ipc --net --pid --"
+        echo "=====HOST====="
+        $NS uptime || true
+        echo "=====DISK====="
+        df -h /host /host/var 2>/dev/null || true
+        echo "=====MEM====="
+        free -m || true
+        echo "=====NGINX_ACTIVE====="
+        $NS systemctl is-active nginx 2>&1 || true
+        echo "=====NGINX_STATUS====="
+        $NS systemctl status nginx --no-pager -l 2>&1 | tail -25 || true
+        echo "=====LISTEN====="
+        $NS ss -lntp 2>&1 | head -25 || true
+        echo "=====NGINX_TEST====="
+        $NS nginx -t 2>&1 || true
+        echo "=====NGINX_ERRLOG====="
+        tail -25 /host/var/log/nginx/error.log 2>&1 || true
+        echo "=====CURRENT_RELEASE====="
+        ls -la /host/var/www/ke-journey.bordy.cn/ 2>&1 | head -12 || true
+        echo "=====RELEASES====="
+        du -sh /host/var/www/ke-journey.bordy.cn/releases/* 2>/dev/null | tail -8 || true
+        echo "=====DOCKER_PS====="
+        $NS docker ps -a --format '{{.Names}} | {{.Status}} | {{.Image}}' 2>&1 | head -15 || true
+        echo "PROBE_DONE"
